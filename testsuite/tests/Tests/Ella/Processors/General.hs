@@ -1,15 +1,15 @@
 {-# OPTIONS_GHC -fglasgow-exts -XOverloadedStrings #-}
-module Tests.Web.Processors.General
+module Tests.Ella.Processors.General
 
 where
 
 import Data.Maybe (fromJust)
-import Web.Processors.General
-import Web.GenUtils ()
-import Web.Response
-import Web.Request
+import Ella.Processors.General
+import Ella.GenUtils ()
+import Ella.Response
+import Ella.Request
 import Test.HUnit
-import Tests.Web.Framework (mkGetReq)
+import Tests.Ella.Framework (mkGetReq)
 
 testAddSlashRedirectView1 =
     (do

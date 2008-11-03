@@ -1,11 +1,11 @@
-module Web.Utils ( addHtml
+module Ella.Utils ( addHtml
                  )
 
 where
 
 import Text.XHtml (renderHtml)
-import Web.Response (addContent)
-import Web.GenUtils (utf8)
+import Ella.Response (addContent)
+import Ella.GenUtils (utf8)
 
 -- Utility functions
 addHtml html resp = addContent (utf8 $ renderHtml html) resp

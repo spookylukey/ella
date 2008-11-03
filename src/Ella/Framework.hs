@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fglasgow-exts -XOverloadedStrings #-}
-module Web.Framework (
+module Ella.Framework (
                       -- * Dispatching
                       dispatchCGI
                      , dispatchRequest
@@ -26,9 +26,9 @@ where
 
 import Control.Monad ((>=>))
 import Data.List (isPrefixOf)
-import Web.GenUtils (apply)
-import Web.Response
-import Web.Request
+import Ella.GenUtils (apply)
+import Ella.Response
+import Ella.Request
 import System.IO (stdout, hClose)
 import qualified Data.ByteString.Lazy.Char8 as BS
 

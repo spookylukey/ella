@@ -1,12 +1,12 @@
-module Web.Processors.General
+module Ella.Processors.General
     ( addSlashRedirectView
     )
 
 where
 
 import Data.List (isSuffixOf)
-import Web.Request
-import Web.Response
+import Ella.Request
+import Ella.Response
 
 -- ** View processors
 

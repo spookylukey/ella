@@ -1,9 +1,9 @@
 {-# OPTIONS_GHC -fglasgow-exts -XOverloadedStrings #-}
-module Tests.Web.Response
+module Tests.Ella.Response
 
 where
 
-import Web.Response
+import Ella.Response
 import Test.HUnit
 import Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as BS

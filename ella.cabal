@@ -1,0 +1,26 @@
+Name:           ella
+Version:        0.1
+Description:    Django-inspired web framework
+License:        BSD3
+License-file:   LICENSE
+Author:         Luke Plant
+Maintainer:     L.Plant.98@cantab.net
+Cabal-Version:  >= 1.2
+Build-Type:     Simple
+
+Library
+  Build-Depends:
+        base,
+        bytestring,
+        haskell98,
+        containers,
+        utf8-string,
+        regex-pcre,
+        regex-base,
+        xhtml,
+        network,
+        cgi
+  Exposed-Modules:
+    Ella.Request, Ella.Response, Ella.GenUtils, Ella.Utils, Ella.Framework,
+    Ella.Processors.General
+  hs-source-dirs: src

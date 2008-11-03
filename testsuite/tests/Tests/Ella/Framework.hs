@@ -1,16 +1,16 @@
 {-# OPTIONS_GHC -fglasgow-exts -XOverloadedStrings #-}
-module Tests.Web.Framework
+module Tests.Ella.Framework
 
 where
 
 import qualified Data.ByteString.Lazy.Char8 as BS
 import Test.HUnit
-import Web.Framework
-import Web.Request
-import Web.Response
+import Ella.Framework
+import Ella.Request
+import Ella.Response
 import Data.Maybe (isNothing, isJust)
 import Control.Monad (liftM, (>=>))
-import Web.GenUtils (utf8)
+import Ella.GenUtils (utf8)
 
 req1 = mkGetReq "/posts/"
 resp1 = buildResponse [ addContent "resp1" ] utf8HtmlResponse

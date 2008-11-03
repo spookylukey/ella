@@ -1,4 +1,4 @@
-module Web.Response ( Response
+module Ella.Response ( Response
                     , content
                     , headers
                     , addContent
@@ -20,7 +20,7 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.List (intersperse)
 import Network.CGI.Protocol (Headers, HeaderName(HeaderName))
 import Network.CGI (ContentType(ContentType), showContentType)
-import Web.GenUtils (apply)
+import Ella.GenUtils (apply)
 
 data Response = Response {
       content :: ByteString

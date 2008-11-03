@@ -1,11 +1,11 @@
 {-# OPTIONS_GHC -fglasgow-exts -XOverloadedStrings #-}
-module Tests.Web.Request
+module Tests.Ella.Request
 
 where
 
-import Web.Request
+import Ella.Request
 import Test.HUnit
-import Web.GenUtils () -- for IsString instance
+import Ella.GenUtils () -- for IsString instance
 
 testMethod = "GET" ~=? requestMethod (mkRequest [("REQUEST_METHOD","GET")] "" utf8Encoding)
 testPath = "foo/bar" ~=? pathInfo (mkRequest [("PATH_INFO", "/foo/bar")] "" utf8Encoding)

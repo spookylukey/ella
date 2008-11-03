@@ -1,6 +1,6 @@
 -- | General utility functions that do not depend on other functions
 -- in Web modules
-module Web.GenUtils
+module Ella.GenUtils
 
 where
 

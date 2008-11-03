@@ -1,4 +1,4 @@
-module Web.Request (
+module Ella.Request (
                     -- * Encodings
                     Encoding(..)
                    , utf8Encoding
