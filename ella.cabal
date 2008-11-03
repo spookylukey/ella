@@ -15,8 +15,6 @@ Library
         haskell98,
         containers,
         utf8-string,
-        regex-pcre,
-        regex-base,
         xhtml,
         network,
         cgi
