@@ -2,10 +2,12 @@
 module Ella.Framework (
                       -- * Dispatching
                       dispatchCGI
+                     , sendResponseCGI
                      , dispatchRequest
                      , DispatchOptions(..)
                      , defaultDispatchOptions
                      , default404
+                     , default500
                      , View
                      -- * Routing mechanism
                      -- $routing
@@ -26,7 +28,7 @@ where
 
 import Control.Monad ((>=>))
 import Data.List (isPrefixOf)
-import Ella.GenUtils (apply)
+import Ella.GenUtils (apply, utf8)
 import Ella.Response
 import Ella.Request
 import System.IO (stdout, hClose)
@@ -49,6 +51,11 @@ default404 = buildResponse [
               setStatus 404,
               addContent "<h1>404 Not Found</h1>\n<p>Sorry, the page you requested could not be found.</p>"
              ] utf8HtmlResponse
+
+default500 content = buildResponse [ setStatus 500
+                                   , addContent "<h1>500 Internal Server Error</h1>\n"
+                                   , addContent $ utf8 content
+                                   ] utf8HtmlResponse
 
 defaultRequestOptions = RequestOptions {
                           encoding = utf8Encoding
@@ -73,6 +80,11 @@ dispatchRequest (v:vs) req = do
     Nothing -> dispatchRequest vs req
     x -> return x
 
+-- | Sends a Response according to the CGI protocol
+sendResponseCGI resp = do
+  BS.hPut stdout (formatResponse resp)
+  hClose stdout
+
 -- | Handle a CGI request using a list of possible views
 -- If a view returns 'Nothing' the next will be tried,
 -- and a 404 issued if all return nothing
@@ -85,8 +97,8 @@ dispatchCGI views opts = do
   resp <- case resp' of
             Nothing -> notFoundHandler opts $ req
             Just x -> return x
-  BS.hPut stdout (formatResponse resp)
-  hClose stdout
+  sendResponseCGI resp
+
 
 -- Routing
 
