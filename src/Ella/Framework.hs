@@ -1,10 +1,12 @@
 {-# OPTIONS_GHC -fglasgow-exts -XOverloadedStrings #-}
 module Ella.Framework (
                       -- * Dispatching
+                      -- $dispatching
                       dispatchCGI
                      , sendResponseCGI
                      , dispatchRequest
                      , DispatchOptions(..)
+                      -- * Defaults
                      , defaultDispatchOptions
                      , default404
                      , default500
@@ -36,6 +38,22 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 
 -- * Dispatching
 
+-- $dispatching
+--
+-- The main entry point for handling CGI requests is @dispatchCGI@
+-- . This creates a Request object according to the CGI protocol, and
+-- dispatches it to a list of views, return a 404 if no view matches.
+-- This process can be customised using @DispatchOptions@.  A set of
+-- defaults for this is provided, @defaultDispatchOptions@, which can
+-- be used as a starting point and customised as needed.
+--
+-- @dispatchCGI@ does not do any error handling.  Since the type of
+-- any error handling function will depend on the libraries being
+-- used, it is easier to wrap the call to @dispatchCGI@ in your own
+-- error handling.  For finer grained error handling, view decorator
+-- functions can be used.
+
+-- | Options for the dispatch process
 data DispatchOptions = DispatchOptions {
       notFoundHandler :: Request -> IO Response
     -- ^ function that will return a 404 page in the case of no view functions matching
@@ -47,26 +65,28 @@ type View = Request -> IO (Maybe Response)
 
 -- * Defaults
 
+-- | A basic 404 response that is used by @defaultDispatchOptions@
 default404 = buildResponse [
               setStatus 404,
               addContent "<h1>404 Not Found</h1>\n<p>Sorry, the page you requested could not be found.</p>"
              ] utf8HtmlResponse
 
+-- | A basic 500 response, not used internally.
 default500 content = buildResponse [ setStatus 500
                                    , addContent "<h1>500 Internal Server Error</h1>\n"
                                    , addContent $ utf8 content
                                    ] utf8HtmlResponse
 
+-- | Default options used for interpreting the request
 defaultRequestOptions = RequestOptions {
                           encoding = utf8Encoding
                         }
 
+-- | A set of DispatchOptions useful as a basis.
 defaultDispatchOptions = DispatchOptions {
                            notFoundHandler = const $ return $ default404
                          , requestOptions = defaultRequestOptions
                          }
-
--- Dispatching
 
 -- | Used by dispatchCGI, might be useful on its own, especially in testing
 --
@@ -146,7 +166,7 @@ dispatchCGI views opts = do
 --
 -- > fixedString "thestring/"
 --
--- The result of the //-> operator needs to be passed a list of \'view
+-- The result of the //-> operator needs to be applied to a list of \'view
 -- decorator\' functions, (which may be an empty list) e.g. \'decs\'
 -- above.  These decorators take a View and return a View, or
 -- alternatively they take a View and a Request and return an IO

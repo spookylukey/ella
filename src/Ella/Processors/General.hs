@@ -1,5 +1,8 @@
 module Ella.Processors.General
-    ( addSlashRedirectView
+    (
+     -- * Processors
+     -- $processors
+     addSlashRedirectView
     )
 
 where
@@ -8,23 +11,28 @@ import Data.List (isSuffixOf)
 import Ella.Request
 import Ella.Response
 
--- ** View processors
-
+-- $processors
+--
+-- Processors are used for doing various tasks, usually not limited
+-- in usefulness to one particular view function.
+--
+-- * View processors
+--
 --  These take a view function and return a view function.
 --  Alternatively, take a view function and a request and return an IO
 --  (Maybe Response).  This allows them to do both request
 --  pre-processing and response post-processing.  They will be usually
 --  be used as \'decorators\' when defining routes.
-
--- ** View functions
-
+--
+-- * View functions
+--
 --  These are straightforward view functions which happen to work as a
 --  kind of pre-handler.  They are installed using routes, usually
 --  before all the others.  These usually do redirects, for example
---  addSlashRedirectView
-
--- ** Response processors
-
+--  @addSlashRedirectView@
+--
+-- * Response processors
+--
 --  These take a response and the original request object, and return
 --  a possibly modified response.  This can be useful for
 --  post-processing, or adding headers etc.

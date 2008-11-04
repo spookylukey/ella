@@ -11,6 +11,8 @@ import GHC.Exts( IsString(..) )
 instance IsString ByteString where
     fromString = UTF8.fromString
 
+-- | Takes a String and returns UTF8 ByteString
+utf8 :: String -> ByteString
 utf8 = UTF8.fromString
 
 -- | Apply a list of transformation functions to an object
@@ -20,4 +22,5 @@ apply :: [a -> a] -- ^ List of functions
 apply fs init = foldl (flip ($)) init fs
 
 -- | Same as apply with arguments flipped
+with :: a -> [a -> a] -> a
 with = flip apply

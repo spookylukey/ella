@@ -1,9 +1,6 @@
 module Ella.Request (
-                    -- * Encodings
-                    Encoding(..)
-                   , utf8Encoding
                     -- * Requests
-                   , Request
+                     Request
                    , RequestOptions(..)
                     -- ** Components of Request
                    , requestMethod
@@ -15,6 +12,9 @@ module Ella.Request (
                    -- * Escaping
                    , escapePath
                    , escapePathWithEnc
+                    -- * Encodings
+                   , Encoding(..)
+                   , utf8Encoding
                    )
 
 where
@@ -30,6 +30,7 @@ import System.IO (stdin)
 
 -- Encodings
 
+-- | Used to store conversion functions need to interpret CGI requests
 data Encoding = Encoding {
       name :: String
     -- ^ descriptive name of the encoding
@@ -45,20 +46,24 @@ instance Eq Encoding where
 instance Show Encoding where
     show x = "Encoding " ++ name x
 
--- Defaults
+-- * Defaults
 
+-- | An @Encoding@ for UTF8
+utf8Encoding :: Encoding
 utf8Encoding = Encoding {
                  name = "UTF8"
                , decoder = UTF8.toString
                , encoder = UTF8.fromString
                }
 
-
 -- | Options that affect the way that HTTP requests are handled
 data RequestOptions = RequestOptions {
       encoding :: Encoding -- ^ Handles request encoding translation
     } deriving (Eq, Show)
 
+-- | Represents a CGI request.  This contains the fundamental data
+-- that is passed around the CGI application.  Accessor functions
+-- are provided to extract all the useful information.
 data Request = Request {
       environment :: Map.Map String String
     , requestBody :: ByteString
@@ -84,6 +89,7 @@ requestMethod request = fromJust $ Map.lookup "REQUEST_METHOD" $ environment req
 
 -- | Returns the path info of the request, with any leading forward slash removed,
 -- and percent encoded chars interpreted according to the encoding.
+pathInfo :: Request -> String
 pathInfo request = let pi = Map.lookup "PATH_INFO" $ environment request
                        -- Normalise to having no leading slash
                        adjusted = case pi of
@@ -98,6 +104,7 @@ pathInfo request = let pi = Map.lookup "PATH_INFO" $ environment request
 -- contain uninterpreted byte sequences instead of Unicode chars.  We
 -- re-pack as bytes (BS.pack discards anything > \255), and then
 -- re-interpret.
+repack :: String -> Encoding -> String
 repack str encoding = let bytes = BS.pack str
                       in (decoder encoding) bytes
 

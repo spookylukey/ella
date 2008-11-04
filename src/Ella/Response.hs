@@ -1,18 +1,23 @@
-module Ella.Response ( Response
+module Ella.Response (
+                      -- * Response object
+                      Response
                     , content
                     , headers
+                    , HeaderName(HeaderName)
+                    -- * Building Response objects
+                    , buildResponse
                     , addContent
+                    , setStatus
+                    , setHeader
+                    -- * Starting points for Response objects
                     , textResponse
                     , utf8TextResponse
                     , htmlResponse
                     , utf8HtmlResponse
                     , emptyResponse
                     , redirectResponse
+                    -- * Using Response objects
                     , formatResponse
-                    , setStatus
-                    , setHeader
-                    , buildResponse
-                    , HeaderName(HeaderName)
                     ) where
 
 import Data.ByteString.Lazy.Char8 (ByteString)
@@ -22,9 +27,10 @@ import Network.CGI.Protocol (Headers, HeaderName(HeaderName))
 import Network.CGI (ContentType(ContentType), showContentType)
 import Ella.GenUtils (apply)
 
+-- | Represents an HTTP response
 data Response = Response {
-      content :: ByteString
-    , headers :: Headers
+      content :: ByteString -- ^ The body of the response
+    , headers :: Headers    -- ^ The HTTP headers of the response
     , status :: Int
     } deriving (Show, Eq)
 
@@ -32,17 +38,22 @@ data Response = Response {
 -- * Creating responses
 --
 
+-- | A basic, empty 200 OK response
+emptyResponse :: Response
 emptyResponse = Response { content = BS.empty
                          , headers = []
                          , status = 200
                          }
 
+-- | Add a string to a response
 addContent :: ByteString -> Response -> Response
 addContent c resp = resp { content =  BS.append (content resp) c }
 
+-- | Set the HTTP status code of a response
 setStatus :: Int -> Response -> Response
 setStatus s resp = resp { status = s }
 
+-- | Set an HTTP header.  Previous values (if present) will be overwritten
 setHeader :: String -> String -> Response -> Response
 setHeader h val resp = let headername = HeaderName h
                            removed = filter ((/= headername) . fst) (headers resp)
@@ -64,21 +75,38 @@ contentTypeName = HeaderName "Content-type"
 textContent charset = "text/plain; charset=" ++ charset
 htmlContent charset = "text/html; charset=" ++ charset
 
+-- | An empty text/plain response of a given charset
+textResponse :: String -> Response
 textResponse charset = emptyResponse {
                          headers = [(contentTypeName, textContent charset)]
                        }
 
+-- | An empty text/html response of a given charset
+htmlResponse :: String -> Response
 htmlResponse charset = emptyResponse {
                          headers = [(contentTypeName, htmlContent charset)]
                        }
 
+-- | An empty UTF8 text/plain response.  The user is responsible
+-- for ensuing that that content added to this response is actually
+-- UTF8 ByteStrings.
+utf8TextResponse :: Response
 utf8TextResponse = textResponse "UTF-8"
 
--- | Create an empty response for sending HTML, UTF-8 encoding
+-- | An empty UTF8 text/html response.  The user is responsible
+-- for ensuing that that content added to this response is actually
+-- UTF8 ByteStrings.
+utf8HtmlResponse :: Response
 utf8HtmlResponse = htmlResponse "UTF-8"
 
 -- | Build a Response from a list of Response transformation functions
--- and an initial Response
+-- and an initial Response.
+--
+-- This is a convenient way of creating responses:
+--
+-- > resp = buildResponse [ setHeader "Location" foo
+-- >                      , setStatus 302
+-- >                      ] utf8HtmlResponse
 buildResponse :: [Response -> Response] -> Response -> Response
 buildResponse = apply
 
@@ -86,7 +114,8 @@ allHeaders resp =
     let statusHeader = (HeaderName "Status", show $ status resp)
     in headers resp ++ [statusHeader]
 
--- | Convert a Response into the format needed for HTTP
+-- | Convert a Response into the format needed for HTTP.
+--
 -- Copied from Network.CGI.Protocol, thank you Bjorn Bringert :-)
 formatResponse :: Response -> ByteString
 formatResponse resp =
@@ -98,6 +127,7 @@ formatResponse resp =
 
 
 -- | Create an HTTP 302 redirect
+redirectResponse :: String -> Response
 redirectResponse location =
     buildResponse [ setStatus 302
                   , setHeader "Location" location
