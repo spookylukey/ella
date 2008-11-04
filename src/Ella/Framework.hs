@@ -159,12 +159,12 @@ dispatchCGI views opts = do
 --
 -- > /
 -- > /posts/
--- > /123/
--- > /abc7/
--- > /123/test/
--- > /test/123/
--- > /123/abc7/
--- > /123/abc7/456/
+-- > /123/             123 captured
+-- > /abc7/            "abc7" captured
+-- > /123/test/        123 captured
+-- > /test/123/        123 captured
+-- > /123/abc7/        123 and "abc7" captured
+-- > /123/abc7/456/    123, "abc7" and 456 captured
 --
 -- The right hand argument of '//->' is a 'view like' function, of type
 -- 'View' OR @a -> 'View'@ OR @a -> b -> 'View'@ etc,
