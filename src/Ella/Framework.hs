@@ -155,6 +155,17 @@ dispatchCGI views opts = do
 -- >  viewWithIntStringInt :: Int -> String -> Int -> Request -> IO (Maybe Response)
 -- >  decs :: [View -> View]
 --
+-- These would correspond to URLs like the following:
+--
+-- > /
+-- > /posts/
+-- > /123/
+-- > /abc7/
+-- > /123/test/
+-- > /test/123/
+-- > /123/abc7/
+-- > /123/abc7/456/
+--
 -- The right hand argument of '//->' is a 'view like' function, of type
 -- 'View' OR @a -> 'View'@ OR @a -> b -> 'View'@ etc,
 --
