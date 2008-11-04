@@ -215,9 +215,9 @@ type PartMatch a = (String, a, Request)
 -- will have a different type to the 'PartMatch' input.
 --
 -- The third component of 'PartMatch' is the entire 'Request' object.
--- This allows matches to operate on other attributes of the 'Request'
+-- This allows matchers to operate on other attributes of the 'Request'
 -- e.g. only match GET requests.  It also allows them to alter
--- the Request object that a view function sees.
+-- the Request object that a view function receives.
 
 -- | Match a string at the beginning of the path
 fixedString :: String -> PartMatch a -> Maybe (PartMatch a)
