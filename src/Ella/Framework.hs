@@ -200,7 +200,7 @@ type PartMatch a = (String, a, Request)
 -- The second component of 'PartMatch' is a 'View' function, or a
 -- function that returns a View when partially applied.  This allows for
 -- matchers that also capture parameters (of different types) and feed
--- them to the view funcions.  In this case, the 'PartMatch' output
+-- them to the view functions.  In this case, the 'PartMatch' output
 -- will have a different type to the 'PartMatch' input.
 --
 -- The third component of 'PartMatch' is the entire 'Request' object.
