@@ -276,9 +276,9 @@ str <+/> matcher = (fixedString str) </> matcher
 -- | Apply a matcher to a View (or View-like function that takes
 -- additional parameters) to get a View that only responds to the
 -- matched URLs
-route :: (PartMatch a -> Maybe (String, View, Request)) -- ^ matcher
-      -> a                                              -- ^ view-like function
-      -> [View -> View]                                 -- ^ optional view decorators (processors)
+route :: (PartMatch a -> Maybe (PartMatch View)) -- ^ matcher
+      -> a                                       -- ^ view-like function
+      -> [View -> View]                          -- ^ optional view decorators (processors)
       -> View
 route matcher f decs =
     \req -> let match = matcher (pathInfo req, f, req)
