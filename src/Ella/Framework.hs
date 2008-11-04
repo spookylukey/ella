@@ -17,6 +17,8 @@ module Ella.Framework (
                      , route
                      , (//->)
                      -- * Matchers
+                     , PartMatch
+                     -- $matchers
                      , fixedString
                      , intParam
                      , stringParam
@@ -185,21 +187,42 @@ dispatchCGI views opts = do
 -- it, and also to simplify this parsing stage, so do not attempt to match
 -- an initial leading slash.
 
+
+-- | type alias used to simplify signatures
+type PartMatch a = (String, a, Request)
+
+-- $matchers
+--
+-- Matching functions take a 'PartMatch' and return a @Maybe 'PartMatch'@.
+-- The first component of 'PartMatch' is a String which is the
+-- remaining part of the 'Ella.Request.pathInfo' still to be matched.
+--
+-- The second component of 'PartMatch' is a 'View' function, or a
+-- function that returns a View when partially applied.  This allows for
+-- matchers that also capture parameters (of different types) and feed
+-- them to the view funcions.  In this case, the 'PartMatch' output
+-- will have a different type to the 'PartMatch' input.
+--
+-- The third component of 'PartMatch' is the entire 'Request' object.
+-- This allows matches to operate on other attributes of the 'Request'
+-- e.g. only match GET requests.  It also allows them to alter
+-- the Request object that a view function sees.
+
 -- | Match a string at the beginning of the path
-fixedString :: String -> (String, a) -> Maybe (String, a)
-fixedString s (path, f) = if s `isPrefixOf` path
-                          then Just (drop (length s) path, f)
-                          else Nothing
+fixedString :: String -> PartMatch a -> Maybe (PartMatch a)
+fixedString s (path, f, r) = if s `isPrefixOf` path
+                             then Just (drop (length s) path, f, r)
+                             else Nothing
 
 -- | Convenience no-op matcher, useful for when you only want to match
 -- a fixed string, or to match an empty string.
-empty :: (String, a) -> Maybe (String, a)
+empty :: PartMatch a -> Maybe (PartMatch a)
 empty = Just
 
 
 -- | matcher that matches any remaining path
-anyPath :: (String, a) -> Maybe (String, a)
-anyPath (path, f) = Just ("", f)
+anyPath :: PartMatch a -> Maybe (PartMatch a)
+anyPath (path, f, r) = Just ("", f, r)
 
 nextChunk path = let (start, end) = break (== '/') path
                  in case end of
@@ -207,51 +230,51 @@ nextChunk path = let (start, end) = break (== '/') path
                       x:rest -> Just (start, rest)
 
 -- | Matcher that captures a string component followed by a forward slash
-stringParam :: (String, String -> a) -> Maybe (String, a)
-stringParam (path, f) = do
+stringParam :: PartMatch (String -> a) -> Maybe (PartMatch a)
+stringParam (path, f, r) = do
   (chunk, rest) <- nextChunk path
-  Just (rest, f chunk)
+  Just (rest, f chunk, r)
 
 -- | Matcher that captures an integer component followed by a forward slash
-intParam :: (String, Int -> a) -> Maybe (String, a)
-intParam (path, f) = do
+intParam :: PartMatch (Int -> a) -> Maybe (PartMatch a)
+intParam (path, f, r) = do
   (chunk, rest) <- nextChunk path
   let parses = reads chunk :: [(Int, String)]
   case parses of
-    [(val, "")] -> Just (rest, f val)
+    [(val, "")] -> Just (rest, f val, r)
     otherwise -> Nothing
 
 -- | Combine two matchers
-(</>) :: ((String, a) -> Maybe (String, b)) -- ^ LH matcher
-      -> ((String, b) -> Maybe (String, c)) -- ^ RH matcher
-      -> ((String, a) -> Maybe (String, c))
+(</>) :: (PartMatch a -> Maybe (PartMatch b)) -- ^ LH matcher
+      -> (PartMatch b -> Maybe (PartMatch c)) -- ^ RH matcher
+      -> (PartMatch a -> Maybe (PartMatch c))
 (</>) = (>=>) -- It turns out that this does the job!
 
 -- | Convenience operator for combining a fixed string after a matcher
-(</+>) :: ((String, a) -> Maybe (String, b))  -- ^ matcher
+(</+>) :: (PartMatch a -> Maybe (PartMatch b))  -- ^ matcher
        -> String                              -- ^ fixed string
-       -> ((String, a) -> Maybe (String, b))
+       -> (PartMatch a -> Maybe (PartMatch b))
 matcher </+> str = matcher </> (fixedString str)
 
 -- | Convenience operator for combining a matcher after a fixed string
 (<+/>) :: String                              -- ^ fixed string
-       -> ((String, a) -> Maybe (String, b))  -- ^ matcher
-       -> ((String, a) -> Maybe (String, b))
+       -> (PartMatch a -> Maybe (PartMatch b))  -- ^ matcher
+       -> (PartMatch a -> Maybe (PartMatch b))
 str <+/> matcher = (fixedString str) </> matcher
 
 -- | Apply a matcher to a View (or View-like function that takes
 -- additional parameters) to get a View that only responds to the
 -- matched URLs
-route :: ((String, a) -> Maybe (String, View)) -- ^ matcher
-      -> a                                     -- ^ view-like function
-      -> [View -> View]                        -- ^ optional view decorators (processors)
+route :: (PartMatch a -> Maybe (String, View, Request)) -- ^ matcher
+      -> a                                              -- ^ view-like function
+      -> [View -> View]                                 -- ^ optional view decorators (processors)
       -> View
 route matcher f decs =
-    \req -> let match = matcher (pathInfo req, f)
+    \req -> let match = matcher (pathInfo req, f, req)
             in case match of
                  Nothing -> return Nothing
-                 Just (remainder, view) -> if null remainder
-                                           then (apply decs view) req
-                                           else return Nothing
--- | Alias for 'route'
+                 Just (remainder, view, req') -> if null remainder
+                                                 then (apply decs view) req'
+                                                 else return Nothing
+-- | Alias for 'route', see above examples.
 (//->) = route
