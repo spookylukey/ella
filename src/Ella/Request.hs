@@ -48,7 +48,7 @@ instance Show Encoding where
 
 -- * Defaults
 
--- | An @Encoding@ for UTF8
+-- | An 'Encoding' for UTF8
 utf8Encoding :: Encoding
 utf8Encoding = Encoding {
                  name = "UTF8"

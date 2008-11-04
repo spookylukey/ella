@@ -8,10 +8,11 @@ module Ella.Framework (
                      , DispatchOptions(..)
                       -- * Defaults
                      , defaultDispatchOptions
+                     , defaultRequestOptions
                      , default404
                      , default500
-                     , View
                      -- * Routing mechanism
+                     , View
                      -- $routing
                      , route
                      , (//->)
@@ -40,49 +41,54 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 
 -- $dispatching
 --
--- The main entry point for handling CGI requests is @dispatchCGI@
+-- The main entry point for handling CGI requests is 'dispatchCGI'
 -- . This creates a Request object according to the CGI protocol, and
 -- dispatches it to a list of views, return a 404 if no view matches.
--- This process can be customised using @DispatchOptions@.  A set of
--- defaults for this is provided, @defaultDispatchOptions@, which can
+-- This process can be customised using 'DispatchOptions'.  A set of
+-- defaults for this is provided, 'defaultDispatchOptions', which can
 -- be used as a starting point and customised as needed.
 --
--- @dispatchCGI@ does not do any error handling.  Since the type of
+-- 'dispatchCGI' does not do any error handling.  Since the type of
 -- any error handling function will depend on the libraries being
--- used, it is easier to wrap the call to @dispatchCGI@ in your own
+-- used, it is easier to wrap the call to 'dispatchCGI' in your own
 -- error handling.  For finer grained error handling, view decorator
--- functions can be used.
+-- functions can be used, as well as error handling within the view
+-- function itself.
 
 -- | Options for the dispatch process
 data DispatchOptions = DispatchOptions {
       notFoundHandler :: Request -> IO Response
     -- ^ function that will return a 404 page in the case of no view functions matching
     , requestOptions :: RequestOptions
-    -- ^ options passed to buildCGIRequest
+    -- ^ options passed to 'buildCGIRequest'
 }
 
 type View = Request -> IO (Maybe Response)
 
 -- * Defaults
 
--- | A basic 404 response that is used by @defaultDispatchOptions@
+-- | A basic 404 response that is used by 'defaultDispatchOptions'
+default404 :: Response
 default404 = buildResponse [
               setStatus 404,
               addContent "<h1>404 Not Found</h1>\n<p>Sorry, the page you requested could not be found.</p>"
              ] utf8HtmlResponse
 
 -- | A basic 500 response, not used internally.
+default500 :: String -> Response
 default500 content = buildResponse [ setStatus 500
                                    , addContent "<h1>500 Internal Server Error</h1>\n"
                                    , addContent $ utf8 content
                                    ] utf8HtmlResponse
 
 -- | Default options used for interpreting the request
+defaultRequestOptions :: RequestOptions
 defaultRequestOptions = RequestOptions {
                           encoding = utf8Encoding
                         }
 
 -- | A set of DispatchOptions useful as a basis.
+defaultDispatchOptions :: DispatchOptions
 defaultDispatchOptions = DispatchOptions {
                            notFoundHandler = const $ return $ default404
                          , requestOptions = defaultRequestOptions
@@ -101,6 +107,7 @@ dispatchRequest (v:vs) req = do
     x -> return x
 
 -- | Sends a Response according to the CGI protocol
+sendResponseCGI :: Response -> IO ()
 sendResponseCGI resp = do
   BS.hPut stdout (formatResponse resp)
   hClose stdout
@@ -146,10 +153,9 @@ dispatchCGI views opts = do
 -- >  viewWithIntStringInt :: Int -> String -> Int -> Request -> IO (Maybe Response)
 -- >  decs :: [View -> View]
 --
--- The right hand argument of //-> is a 'view like' function, of type
--- View OR a -> View OR a -> b -> View etc,
--- where View = Request -> IO (Maybe Response)
-
+-- The right hand argument of '//->' is a 'view like' function, of type
+-- 'View' OR @a -> 'View'@ OR @a -> b -> 'View'@ etc,
+--
 -- The left hand argument of '//->' is a \'matcher\' - it parses the
 -- path of the Request, optionally capturing parameters and returning
 -- a function that will adapt the right hand argument so that it has
@@ -157,7 +163,7 @@ dispatchCGI views opts = do
 --
 -- Matchers can be composed using '</>'.  To match a fixed string
 -- without capturing, use @fixedString "thestring"@. The operators
--- </+> amd <+/> are useful for combining fixed strings with other
+-- '</+>' amd '<+/>' are useful for combining fixed strings with other
 -- matchers.  To match just a fixed string, you can use
 --
 -- > "thestring/" <+/> empty
@@ -166,7 +172,7 @@ dispatchCGI views opts = do
 --
 -- > fixedString "thestring/"
 --
--- The result of the //-> operator needs to be applied to a list of \'view
+-- The result of the '//->' operator needs to be applied to a list of \'view
 -- decorator\' functions, (which may be an empty list) e.g. \'decs\'
 -- above.  These decorators take a View and return a View, or
 -- alternatively they take a View and a Request and return an IO
@@ -192,6 +198,7 @@ empty = Just
 
 
 -- | matcher that matches any remaining path
+anyPath :: (String, a) -> Maybe (String, a)
 anyPath (path, f) = Just ("", f)
 
 nextChunk path = let (start, end) = break (== '/') path
@@ -221,8 +228,15 @@ intParam (path, f) = do
 (</>) = (>=>) -- It turns out that this does the job!
 
 -- | Convenience operator for combining a fixed string after a matcher
+(</+>) :: ((String, a) -> Maybe (String, b))  -- ^ matcher
+       -> String                              -- ^ fixed string
+       -> ((String, a) -> Maybe (String, b))
 matcher </+> str = matcher </> (fixedString str)
+
 -- | Convenience operator for combining a matcher after a fixed string
+(<+/>) :: String                              -- ^ fixed string
+       -> ((String, a) -> Maybe (String, b))  -- ^ matcher
+       -> ((String, a) -> Maybe (String, b))
 str <+/> matcher = (fixedString str) </> matcher
 
 -- | Apply a matcher to a View (or View-like function that takes

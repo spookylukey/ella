@@ -29,7 +29,7 @@ import Ella.Response
 --  These are straightforward view functions which happen to work as a
 --  kind of pre-handler.  They are installed using routes, usually
 --  before all the others.  These usually do redirects, for example
---  @addSlashRedirectView@
+--  'addSlashRedirectView'
 --
 -- * Response processors
 --
