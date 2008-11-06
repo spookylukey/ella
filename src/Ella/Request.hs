@@ -100,8 +100,8 @@ pathInfo request = let pi = Map.lookup "PATH_INFO" $ environment request
 
 -- | Repacks bytes in a string according to an encoding
 --
--- PATH_INFO and other vars contains Haskell strings, but they
--- contain uninterpreted byte sequences instead of Unicode chars.  We
+-- PATH_INFO and other vars contains Haskell strings, but they contain
+-- uninterpreted byte sequences instead of genuine Unicode chars.  We
 -- re-pack as bytes (BS.pack discards anything > \255), and then
 -- re-interpret.
 repack :: String -> Encoding -> String
