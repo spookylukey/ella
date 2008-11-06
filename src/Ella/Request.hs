@@ -109,7 +109,7 @@ repack str encoding = let bytes = BS.pack str
                       in (decoder encoding) bytes
 
 -- | Returns the URI requested by the client, with percent encoding intact
-requestUriRaw :: Request -> Maybe String
+requestUriRaw :: (Monad m) => Request -> m String
 requestUriRaw request = Map.lookup "REQUEST_URI" $ environment request
 
 
