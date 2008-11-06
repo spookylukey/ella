@@ -155,11 +155,7 @@ escapePathWithEnc s enc = escapePath (encoder enc $ s)
 
 -- | Retrieve a single POST value
 getPOST :: (Monad m) => String -> Request -> m String
-getPOST name req = do
-  let vals = getMatching name (reverse $ postInputs req)
-  case vals of
-    [] -> fail "POST var not found"
-    (x:xs) -> return x
+getPOST name req = Map.lookup name $ _postInputMap req
 
 getPOSTlist :: String -> Request -> [String]
 getPOSTlist name req = getMatching name (postInputs req)
