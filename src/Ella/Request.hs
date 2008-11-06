@@ -2,11 +2,14 @@ module Ella.Request (
                     -- * Requests
                      Request
                    , RequestOptions(..)
-                    -- ** Components of Request
+                    -- ** Accessors of Request
                    , requestMethod
                    , pathInfo
                    , requestUriRaw
                    , environment
+                   , postInputs
+                   , getPOST
+                   , getPOSTlist
                     -- ** Constructors for Request
                    , mkRequest, buildCGIRequest
                    -- * Escaping
@@ -18,6 +21,9 @@ module Ella.Request (
                    )
 
 where
+
+import Network.CGI.Protocol (takeInput, decodeInput, formDecode, Input, inputValue)
+--import Network.CGI.Multipart
 
 import qualified Data.Map as Map
 import Data.ByteString.Lazy.Char8 (ByteString)
@@ -68,6 +74,9 @@ data Request = Request {
       environment :: Map.Map String String
     , requestBody :: ByteString
     , requestEncoding :: Encoding
+    , _env :: [(String, String)]
+    , postInputs :: [(String, String)]
+    , _postInputMap :: Map.Map String String
     } deriving (Show, Eq)
 
 -- | Create a Request object
@@ -81,7 +90,14 @@ mkRequest env body enc
                environment = envMap
              , requestBody = body
              , requestEncoding = enc
+             , _env = env
+             , postInputs = pv
+             , _postInputMap = Map.fromList pv -- later vals overwrite earlier, which we want
              }
+      where
+        -- This is incorrect (decodeInput includes GET params), but OK for now.
+        pv = map repack_inp $ fst $ decodeInput env body
+        repack_inp (name, val) = (repack name enc, (decoder enc) (inputValue val))
 
 -- | Returns the request method (GET, POST etc) of the request
 requestMethod :: Request -> String
@@ -109,6 +125,9 @@ repack str encoding = let bytes = BS.pack str
                       in (decoder encoding) bytes
 
 -- | Returns the URI requested by the client, with percent encoding intact
+--
+-- This can fail if the environment does not pass "REQUEST_URI".  Apache
+-- always does pass this, so normally just use 'fromJust' on the answer.
 requestUriRaw :: (Monad m) => Request -> m String
 requestUriRaw request = Map.lookup "REQUEST_URI" $ environment request
 
@@ -133,3 +152,16 @@ escapePath bs = escapeURIString isUnescapedInURIPath $ BS.unpack bs
 escapePathWithEnc :: String -> Encoding -> String
 escapePathWithEnc s enc = escapePath (encoder enc $ s)
 
+
+-- | Retrieve a single POST value
+getPOST :: (Monad m) => String -> Request -> m String
+getPOST name req = do
+  let vals = getMatching name (reverse $ postInputs req)
+  case vals of
+    [] -> fail "POST var not found"
+    (x:xs) -> return x
+
+getPOSTlist :: String -> Request -> [String]
+getPOSTlist name req = getMatching name (postInputs req)
+
+getMatching name assoclist = map snd $ filter ((==name) . fst) assoclist
