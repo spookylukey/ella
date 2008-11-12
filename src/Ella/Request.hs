@@ -8,10 +8,15 @@ module Ella.Request (
                    , requestUriRaw
                    , environment
                    , postInputs
+                   , getInputs
                    , getPOST
                    , getPOSTlist
+                   , getGET
+                   , getGETlist
                     -- ** Constructors for Request
-                   , mkRequest, buildCGIRequest
+                   , mkRequest
+                   , buildCGIRequest
+                   , changeEncoding
                    -- * Escaping
                    , escapePath
                    , escapePathWithEnc
@@ -22,8 +27,10 @@ module Ella.Request (
 
 where
 
-import Network.CGI.Protocol (takeInput, decodeInput, formDecode, Input, inputValue)
---import Network.CGI.Multipart
+import Network.CGI.Protocol (takeInput, formDecode, Input(..), inputValue, inputFilename, inputContentType)
+import Network.CGI.Multipart
+import Network.CGI.Header
+
 
 import qualified Data.Map as Map
 import Data.ByteString.Lazy.Char8 (ByteString)
@@ -75,8 +82,10 @@ data Request = Request {
     , requestBody :: ByteString
     , requestEncoding :: Encoding
     , _env :: [(String, String)]
-    , postInputs :: [(String, String)]
+    , postInputs :: [(String, String)] -- ^ all of the POST name-value pairs
     , _postInputMap :: Map.Map String String
+    , getInputs :: [(String, String)] -- ^ all of the GET name-value pairs
+    , _getInputMap :: Map.Map String String
     } deriving (Show, Eq)
 
 -- | Create a Request object
@@ -93,11 +102,22 @@ mkRequest env body enc
              , _env = env
              , postInputs = pv
              , _postInputMap = Map.fromList pv -- later vals overwrite earlier, which we want
+             , getInputs = gv
+             , _getInputMap = Map.fromList gv
              }
       where
         -- This is incorrect (decodeInput includes GET params), but OK for now.
-        pv = map repack_inp $ fst $ decodeInput env body
+        pv = map repack_inp $ fst $ bodyInput env body
+        gv = map repack_inp $ queryInput env
         repack_inp (name, val) = (repack name enc, (decoder enc) (inputValue val))
+
+-- | Change a Request encoding
+--
+-- Reinterprets the data in a Request according to new encoding.  It
+-- is not enough to just change the 'encoding' value, as some data
+-- that depends on the encoding has already been created.
+changeEncoding :: Encoding -> Request -> Request
+changeEncoding enc req = mkRequest (_env req) (requestBody req) enc
 
 -- | Returns the request method (GET, POST etc) of the request
 requestMethod :: Request -> String
@@ -157,7 +177,101 @@ escapePathWithEnc s enc = escapePath (encoder enc $ s)
 getPOST :: (Monad m) => String -> Request -> m String
 getPOST name req = Map.lookup name $ _postInputMap req
 
+-- | Retrieve all the POST values with the given name
+--
+-- This is needed if values are submitted with the same name
 getPOSTlist :: String -> Request -> [String]
 getPOSTlist name req = getMatching name (postInputs req)
 
+-- | Retrieve a single query string value
+getGET :: (Monad m) => String -> Request -> m String
+getGET name req = Map.lookup name $ _getInputMap req
+
+-- | Retrieve all the query string values with the given name
+getGETlist :: String -> Request -> [String]
+getGETlist name req = getMatching name (getInputs req)
+
 getMatching name assoclist = map snd $ filter ((==name) . fst) assoclist
+
+
+-- The following is taken mainly from CGI.Protocol, with modifications
+
+
+queryInput :: [(String,String)] -- ^ CGI environment variables.
+           -> [(String,Input)] -- ^ Input variables and values.
+queryInput env = formInput $ lookupOrNil "QUERY_STRING" env
+
+-- | Decodes application\/x-www-form-urlencoded inputs.
+formInput :: String
+          -> [(String,Input)] -- ^ Input variables and values.
+formInput qs = [(n, simpleInput v) | (n,v) <- formDecode qs]
+
+
+-- | Builds an 'Input' object for a simple value.
+simpleInput :: String -> Input
+simpleInput v = Input { inputValue = BS.pack v,
+                        inputFilename = Nothing,
+                        inputContentType = defaultInputType }
+
+-- | The default content-type for variables.
+defaultInputType :: ContentType
+defaultInputType = ContentType "text" "plain" [] -- FIXME: use some default encoding?
+
+
+bodyInput :: [(String,String)]
+          -> ByteString
+          -> ([(String,Input)], ByteString)
+bodyInput env inp =
+   case lookup "REQUEST_METHOD" env of
+      Just "POST" ->
+          let ctype = lookup "CONTENT_TYPE" env >>= parseContentType
+           in decodeBody ctype $ takeInput env inp
+      _ -> ([], inp)
+
+-- | Decodes a POST body.
+decodeBody :: Maybe ContentType
+           -> ByteString
+           -> ([(String,Input)], ByteString)
+decodeBody ctype inp =
+    case ctype of
+               Just (ContentType "application" "x-www-form-urlencoded" _)
+                   -> (formInput (BS.unpack inp), BS.empty)
+               Just (ContentType "multipart" "form-data" ps)
+                   -> (multipartDecode ps inp, BS.empty)
+               Just _ -> ([], inp) -- unknown content-type, the user will have to
+                            -- deal with it by looking at the raw content
+               -- No content-type given, assume x-www-form-urlencoded
+               Nothing -> (formInput (BS.unpack inp), BS.empty)
+
+
+-- | Decodes multipart\/form-data input.
+multipartDecode :: [(String,String)] -- ^ Content-type parameters
+                -> ByteString        -- ^ Request body
+                -> [(String,Input)]  -- ^ Input variables and values.
+multipartDecode ps inp =
+    case lookup "boundary" ps of
+         Just b -> let MultiPart bs = parseMultipartBody b inp
+                    in map bodyPartToInput bs
+         Nothing -> [] -- FIXME: report that there was no boundary
+
+bodyPartToInput :: BodyPart -> (String,Input)
+bodyPartToInput (BodyPart hs b) =
+    case getContentDisposition hs of
+              Just (ContentDisposition "form-data" ps) ->
+                  (lookupOrNil "name" ps,
+                   Input { inputValue = b,
+                           inputFilename = lookup "filename" ps,
+                           inputContentType = ctype })
+              _ -> ("ERROR",simpleInput "ERROR") -- FIXME: report error
+    where ctype = fromMaybe defaultInputType (getContentType hs)
+
+
+--
+-- * Utilities
+--
+
+-- | Same as 'lookup' specialized to strings, but
+--   returns the empty string if lookup fails.
+lookupOrNil :: String -> [(String,String)] -> String
+lookupOrNil n = fromMaybe "" . lookup n
+

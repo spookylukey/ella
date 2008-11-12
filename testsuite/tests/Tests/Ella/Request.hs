@@ -16,7 +16,7 @@ testRequestUriRaw = Just "/root/foo/%C3%A9/" ~=? requestUriRaw (mkRequest [("REQ
                                                                           ,("PATH_INFO","/foo/\195\169/")] "" utf8Encoding)
 
 -- application/x-www-form-urlencoded
-pr1_content = "foo=bar&baz=fizz&foo=bar2"
+pr1_content = "foo=bar&baz=%C3%A9&foo=bar2&%C3%A9=z"
 postRequest1 = mkRequest [ ("REQUEST_METHOD", "POST")
                          , ("CONTENT_TYPE", "application/x-www-form-urlencoded")
                          , ("CONTENT_LENGTH", show $ BS.length pr1_content)
@@ -29,11 +29,23 @@ postRequest2 = mkRequest [ ("REQUEST_METHOD", "POST")
                          , ("CONTENT_LENGTH", show $ BS.length pr2_content)
                          ] pr2_content utf8Encoding
 
+postRequest1_b = mkRequest [ ("REQUEST_METHOD", "POST")
+                           , ("CONTENT_TYPE", "application/x-www-form-urlencoded")
+                           , ("QUERY_STRING", "foo=bar3&frobble=gobble")
+                           , ("CONTENT_LENGTH", show $ BS.length pr1_content)
+                           ] pr1_content utf8Encoding
+
+-- getPOST --
+
 -- application/x-www-form-urlencoded
 test_getPOST_Missing_urlenc =
     Nothing ~=? getPOST "test" postRequest1
 test_getPOST_urlenc  =
     Just "bar2" ~=? getPOST "foo" postRequest1
+test_getPOST_urlenc2 =
+    Just "\233" ~=? getPOST "baz" postRequest1
+test_getPOST_urlenc3 =
+    Just "z" ~=? getPOST "\233" postRequest1
 test_getPOSTlist_urlenc =
     ["bar", "bar2"] ~=? getPOSTlist "foo" postRequest1
 
@@ -45,6 +57,23 @@ test_getPOST_mp  =
 test_getPOSTlist_mp =
     ["bar", "bar2"] ~=? getPOSTlist "foo" postRequest2
 
+-- test that GET and POST are not mixed up
+test_getPOST_postonly = Nothing ~=? getPOST "frobble" postRequest1_b
+
+
+-- getGET --
+getRequest1 = mkRequest [("REQUEST_METHOD", "GET")] "" utf8Encoding
+getRequest2 = mkRequest [("REQUEST_METHOD", "GET")
+                        ,("QUERY_STRING", "frobble=v1&foo=bar&baz=%C3%A9&frobble=v2&%C3%A9=z")] "" utf8Encoding
+
+test_getGET_1 = Nothing ~=? getGET "x" getRequest1
+test_getGET_2 = Nothing ~=? getGET "x" getRequest2
+test_getGET_3 = Just "bar" ~=? getGET "foo" getRequest2
+test_getGET_4 = Just "v2" ~=? getGET "frobble" getRequest2
+test_getGET_5 = Just "\233" ~=? getGET "baz" getRequest2
+test_getGET_6 = Just "z" ~=? getGET "\233" getRequest2
+test_getGETlist_1 = ["v1","v2"] ~=? getGETlist "frobble" getRequest2
+
 
 tests = test [
           testMethod
@@ -54,8 +83,18 @@ tests = test [
         , testRequestUriRaw
         , test_getPOST_Missing_urlenc
         , test_getPOST_urlenc
+        , test_getPOST_urlenc2
+        , test_getPOST_urlenc3
         , test_getPOSTlist_urlenc
         , test_getPOST_Missing_mp
         , test_getPOST_mp
         , test_getPOSTlist_mp
+        , test_getPOST_postonly
+        , test_getGET_1
+        , test_getGET_2
+        , test_getGET_3
+        , test_getGET_4
+        , test_getGET_5
+        , test_getGET_6
+        , test_getGETlist_1
         ]
