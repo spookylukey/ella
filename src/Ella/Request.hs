@@ -106,9 +106,9 @@ mkRequest env body enc
              , _getInputMap = Map.fromList gv
              }
       where
-        -- This is incorrect (decodeInput includes GET params), but OK for now.
         pv = map repack_inp $ fst $ bodyInput env body
         gv = map repack_inp $ queryInput env
+        -- TODO - rewrite bodyInput, queryInput so that repack_inp is not necessary
         repack_inp (name, val) = (repack name enc, (decoder enc) (inputValue val))
 
 -- | Change a Request encoding
@@ -217,6 +217,8 @@ simpleInput v = Input { inputValue = BS.pack v,
 defaultInputType :: ContentType
 defaultInputType = ContentType "text" "plain" [] -- FIXME: use some default encoding?
 
+
+-- TODO - rewrite bodyInput, queryInput etc. so that they use a supplied encoding
 
 bodyInput :: [(String,String)]
           -> ByteString
