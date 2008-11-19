@@ -43,9 +43,9 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 
 -- $dispatching
 --
--- The main entry point for handling CGI requests is 'dispatchCGI'
--- . This creates a Request object according to the CGI protocol, and
--- dispatches it to a list of views, return a 404 if no view matches.
+-- The main entry point for handling CGI requests is 'dispatchCGI'. 
+-- This creates a Request object according to the CGI protocol, 
+-- dispatches it to a list of views, returning a 404 if no view matches.
 -- This process can be customised using 'DispatchOptions'.  A set of
 -- defaults for this is provided, 'defaultDispatchOptions', which can
 -- be used as a starting point and customised as needed.
