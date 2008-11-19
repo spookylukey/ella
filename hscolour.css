@@ -1,0 +1,8 @@
+.keyglyph, .layout {color: #000099;}
+.keyword {color: blue;}
+.comment, .comment a {color: green;}
+.str, .chr {color: #003366;}
+.varop { color: #330099;}
+.num { color:red;}
+.conid { color: #993300;}
+.conid, .varid, .conop, .num, .cpp, .sel, .definition {}
