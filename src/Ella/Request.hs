@@ -7,8 +7,8 @@ module Ella.Request (
                    , pathInfo
                    , requestUriRaw
                    , environment
-                   , postInputs
-                   , getInputs
+                   , allPOST
+                   , allGET
                    , getPOST
                    , getPOSTlist
                    , getGET
@@ -82,9 +82,9 @@ data Request = Request {
     , requestBody :: ByteString
     , requestEncoding :: Encoding
     , _env :: [(String, String)]
-    , postInputs :: [(String, String)] -- ^ all of the POST name-value pairs
+    , allPOST :: [(String, String)] -- ^ all of the POST name-value pairs
     , _postInputMap :: Map.Map String String
-    , getInputs :: [(String, String)] -- ^ all of the GET name-value pairs
+    , allGET :: [(String, String)] -- ^ all of the GET name-value pairs
     , _getInputMap :: Map.Map String String
     } deriving (Show, Eq)
 
@@ -100,9 +100,9 @@ mkRequest env body enc
              , requestBody = body
              , requestEncoding = enc
              , _env = env
-             , postInputs = pv
+             , allPOST = pv
              , _postInputMap = Map.fromList pv -- later vals overwrite earlier, which we want
-             , getInputs = gv
+             , allGET = gv
              , _getInputMap = Map.fromList gv
              }
       where
@@ -181,7 +181,7 @@ getPOST name req = Map.lookup name $ _postInputMap req
 --
 -- This is needed if values are submitted with the same name
 getPOSTlist :: String -> Request -> [String]
-getPOSTlist name req = getMatching name (postInputs req)
+getPOSTlist name req = getMatching name (allPOST req)
 
 -- | Retrieve a single query string value
 getGET :: (Monad m) => String -> Request -> m String
@@ -189,7 +189,7 @@ getGET name req = Map.lookup name $ _getInputMap req
 
 -- | Retrieve all the query string values with the given name
 getGETlist :: String -> Request -> [String]
-getGETlist name req = getMatching name (getInputs req)
+getGETlist name req = getMatching name (allGET req)
 
 getMatching name assoclist = map snd $ filter ((==name) . fst) assoclist
 
