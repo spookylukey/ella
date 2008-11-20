@@ -81,15 +81,15 @@ data RequestOptions = RequestOptions {
 -- that is passed around the CGI application.  Accessor functions
 -- are provided to extract all the useful information.
 data Request = Request {
-      environment :: Map.Map String String
-    , requestBody :: ByteString
-    , requestEncoding :: Encoding
+      environment :: Map.Map String String -- ^ a map containing the CGI environment var
+    , requestBody :: ByteString -- ^ the body of the HTTP request
+    , requestEncoding :: Encoding -- ^ the encoding used to interpret the request
     , _env :: [(String, String)]
     , allPOST :: [(String, String)] -- ^ all of the POST name-value pairs
     , _postInputMap :: Map.Map String String
     , allGET :: [(String, String)] -- ^ all of the GET name-value pairs
     , _getInputMap :: Map.Map String String
-    , files :: Map.Map String FileInput
+    , files :: Map.Map String FileInput -- ^ a map of all uploaded files
     } deriving (Show, Eq)
 
 -- | Create a Request object
