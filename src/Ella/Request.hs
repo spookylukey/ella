@@ -107,7 +107,7 @@ mkRequest env body enc
              }
       where
         pv = map repack_inp $ fst $ bodyInput env body
-        gv = map repack_inp $ queryInput env
+        gv = queryInput env enc
         -- TODO - rewrite bodyInput, queryInput so that repack_inp is not necessary
         repack_inp (name, val) = (repack name enc, (decoder enc) (inputValue val))
 
@@ -198,8 +198,17 @@ getMatching name assoclist = map snd $ filter ((==name) . fst) assoclist
 
 
 queryInput :: [(String,String)] -- ^ CGI environment variables.
-           -> [(String,Input)] -- ^ Input variables and values.
-queryInput env = formInput $ lookupOrNil "QUERY_STRING" env
+           -> Encoding
+           -> [(String,String)] -- ^ Input variables and values.
+queryInput env enc = formInputEnc (lookupOrNil "QUERY_STRING" env) enc
+
+
+-- | Decodes application\/x-www-form-urlencoded inputs.
+formInputEnc :: String
+             -> Encoding          -- ^ Encoding to use to interpret bytes
+             -> [(String,String)] -- ^ Input variables and values.
+formInputEnc qs encoding = [(repack n encoding, repack v encoding) | (n,v) <- formDecode qs]
+
 
 -- | Decodes application\/x-www-form-urlencoded inputs.
 formInput :: String
