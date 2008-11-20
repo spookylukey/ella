@@ -13,6 +13,7 @@ module Ella.Request (
                    , getPOSTlist
                    , getGET
                    , getGETlist
+                   , files
                     -- ** Constructors for Request
                    , mkRequest
                    , buildCGIRequest
@@ -23,20 +24,22 @@ module Ella.Request (
                     -- * Encodings
                    , Encoding(..)
                    , utf8Encoding
+                    -- * Files
+                   , FileInput(..)
+                   , ContentType(..)
                    )
 
 where
 
-import Network.CGI.Protocol (takeInput, formDecode, Input(..), inputValue, inputFilename, inputContentType)
-import Network.CGI.Multipart
-import Network.CGI.Header
-
-
-import qualified Data.Map as Map
 import Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
+import Data.List (partition)
+import qualified Data.Map as Map
 import Data.Maybe
+import Network.CGI.Protocol (takeInput, formDecode)
+import Network.CGI.Multipart
+import Network.CGI.Header
 import Network.URI (escapeURIString, isUnescapedInURI)
 import System.Environment (getEnvironment)
 import System.IO (stdin)
@@ -86,6 +89,7 @@ data Request = Request {
     , _postInputMap :: Map.Map String String
     , allGET :: [(String, String)] -- ^ all of the GET name-value pairs
     , _getInputMap :: Map.Map String String
+    , files :: Map.Map String FileInput
     } deriving (Show, Eq)
 
 -- | Create a Request object
@@ -100,18 +104,18 @@ mkRequest env body enc
              , requestBody = body
              , requestEncoding = enc
              , _env = env
-             , allPOST = pv
-             , _postInputMap = Map.fromList pv -- later vals overwrite earlier, which we want
-             , allGET = gv
-             , _getInputMap = Map.fromList gv
+             , allPOST = pvs
+             , _postInputMap = Map.fromList pvs -- later vals overwrite earlier, which we want
+             , allGET = gvs
+             , _getInputMap = Map.fromList gvs
+             , files = Map.fromList fvs
              }
       where
-        pv = map repack_inp $ fst $ bodyInput env body
-        gv = queryInput env enc
-        -- TODO - rewrite bodyInput, queryInput so that repack_inp is not necessary
-        repack_inp (name, val) = (repack name enc, (decoder enc) (inputValue val))
+        (pvs, fvs) = bodyInput env body enc      -- post vals, file vals
+        gvs = queryInput env enc                 -- get vals
 
--- | Change a Request encoding
+
+-- | Change a Request's encoding
 --
 -- Reinterprets the data in a Request according to new encoding.  It
 -- is not enough to just change the 'encoding' value, as some data
@@ -172,7 +176,6 @@ escapePath bs = escapeURIString isUnescapedInURIPath $ BS.unpack bs
 escapePathWithEnc :: String -> Encoding -> String
 escapePathWithEnc s enc = escapePath (encoder enc $ s)
 
-
 -- | Retrieve a single POST value
 getPOST :: (Monad m) => String -> Request -> m String
 getPOST name req = Map.lookup name $ _postInputMap req
@@ -191,12 +194,12 @@ getGET name req = Map.lookup name $ _getInputMap req
 getGETlist :: String -> Request -> [String]
 getGETlist name req = getMatching name (allGET req)
 
-getMatching name assoclist = map snd $ filter ((==name) . fst) assoclist
 
+-- Much of the following is taken mainly from CGI.Protocol, with
+-- large modifications to add support for encoding and to
+-- replace Input with String/FileInput
 
--- The following is taken mainly from CGI.Protocol, with modifications
-
-
+-- | Decodes the input in the query string
 queryInput :: [(String,String)] -- ^ CGI environment variables.
            -> Encoding
            -> [(String,String)] -- ^ Input variables and values.
@@ -205,75 +208,75 @@ queryInput env enc = formInputEnc (lookupOrNil "QUERY_STRING" env) enc
 
 -- | Decodes application\/x-www-form-urlencoded inputs.
 formInputEnc :: String
-             -> Encoding          -- ^ Encoding to use to interpret bytes
+             -> Encoding          -- ^ Encoding to use to interpret percent-encoded sequences
              -> [(String,String)] -- ^ Input variables and values.
 formInputEnc qs encoding = [(repack n encoding, repack v encoding) | (n,v) <- formDecode qs]
 
-
--- | Decodes application\/x-www-form-urlencoded inputs.
-formInput :: String
-          -> [(String,Input)] -- ^ Input variables and values.
-formInput qs = [(n, simpleInput v) | (n,v) <- formDecode qs]
-
-
--- | Builds an 'Input' object for a simple value.
-simpleInput :: String -> Input
-simpleInput v = Input { inputValue = BS.pack v,
-                        inputFilename = Nothing,
-                        inputContentType = defaultInputType }
+-- | Represents an uploaded file
+data FileInput = FileInput { fileFilename :: String -- ^ user supplied filename for file
+                           , fileContents :: ByteString -- ^ raw contents of the file
+                           , fileContentType :: ContentType -- ^ user supplied content-type of the file
+                           } deriving (Read, Show, Eq)
 
 -- | The default content-type for variables.
 defaultInputType :: ContentType
 defaultInputType = ContentType "text" "plain" [] -- FIXME: use some default encoding?
 
 
--- TODO - rewrite bodyInput, queryInput etc. so that they use a supplied encoding
-
 bodyInput :: [(String,String)]
           -> ByteString
-          -> ([(String,Input)], ByteString)
-bodyInput env inp =
+          -> Encoding
+          -> ([(String,String)], [(String,FileInput)])
+bodyInput env inp enc =
    case lookup "REQUEST_METHOD" env of
       Just "POST" ->
           let ctype = lookup "CONTENT_TYPE" env >>= parseContentType
-           in decodeBody ctype $ takeInput env inp
-      _ -> ([], inp)
+          in decodeBody ctype (takeInput env inp) enc
+      _ -> ([], [])
 
--- | Decodes a POST body.
+-- | Decodes a POST body
 decodeBody :: Maybe ContentType
            -> ByteString
-           -> ([(String,Input)], ByteString)
-decodeBody ctype inp =
+           -> Encoding
+           -> ([(String,String)], [(String,FileInput)])
+decodeBody ctype inp enc =
     case ctype of
                Just (ContentType "application" "x-www-form-urlencoded" _)
-                   -> (formInput (BS.unpack inp), BS.empty)
+                   -> (formInputEnc (BS.unpack inp) enc, [])
                Just (ContentType "multipart" "form-data" ps)
-                   -> (multipartDecode ps inp, BS.empty)
-               Just _ -> ([], inp) -- unknown content-type, the user will have to
-                            -- deal with it by looking at the raw content
+                   -> multipartDecode ps inp enc
+               Just _ -> ([], []) -- unknown content-type, the user will have to
+                                  -- deal with it by looking at the raw content
                -- No content-type given, assume x-www-form-urlencoded
-               Nothing -> (formInput (BS.unpack inp), BS.empty)
+               Nothing -> (formInputEnc (BS.unpack inp) enc, [])
 
 
 -- | Decodes multipart\/form-data input.
 multipartDecode :: [(String,String)] -- ^ Content-type parameters
                 -> ByteString        -- ^ Request body
-                -> [(String,Input)]  -- ^ Input variables and values.
-multipartDecode ps inp =
+                -> Encoding          -- ^ Encoding to use for interpreting
+                -> ([(String,String)]
+                   ,[(String,FileInput)])  -- ^ Input variables and values, and file inputs
+multipartDecode ps inp enc =
     case lookup "boundary" ps of
          Just b -> let MultiPart bs = parseMultipartBody b inp
-                    in map bodyPartToInput bs
-         Nothing -> [] -- FIXME: report that there was no boundary
+                    in splitLeftRight $ map (bodyPartToInput enc) bs
+         Nothing -> ([],[]) -- FIXME: report that there was no boundary
 
-bodyPartToInput :: BodyPart -> (String,Input)
-bodyPartToInput (BodyPart hs b) =
+-- Uses Either to return two different types of value
+bodyPartToInput :: Encoding -> BodyPart -> Either (String,String) (String,FileInput)
+bodyPartToInput enc (BodyPart hs b) =
     case getContentDisposition hs of
               Just (ContentDisposition "form-data" ps) ->
-                  (lookupOrNil "name" ps,
-                   Input { inputValue = b,
-                           inputFilename = lookup "filename" ps,
-                           inputContentType = ctype })
-              _ -> ("ERROR",simpleInput "ERROR") -- FIXME: report error
+                  let name = repack (lookupOrNil "name" ps) enc
+                      filename = lookup "filename" ps
+                  in case filename of
+                       Just f -> Right (name, FileInput { fileFilename = repack f enc
+                                                        , fileContentType = ctype
+                                                        , fileContents = b
+                                                        })
+                       Nothing -> Left (name, (decoder enc) b)
+              _ -> error "No Content-Disposition in input"
     where ctype = fromMaybe defaultInputType (getContentType hs)
 
 
@@ -286,3 +289,11 @@ bodyPartToInput (BodyPart hs b) =
 lookupOrNil :: String -> [(String,String)] -> String
 lookupOrNil n = fromMaybe "" . lookup n
 
+-- | Partitions a list of [Either a b] into two lists
+splitLeftRight xs = let (ls, rs) = partition isLeft xs
+                    in (map (either id undefined) ls,
+                        map (either undefined id) rs)
+isLeft (Left x) = True
+isLeft _        = False
+
+getMatching name assoclist = map snd $ filter ((==name) . fst) assoclist

@@ -3,7 +3,9 @@ module Tests.Ella.Request
 
 where
 
+import qualified Data.Map as Map
 import qualified Data.ByteString.Lazy.Char8 as BS
+import Data.ByteString.Lazy.Char8 (ByteString)
 import Ella.Request
 import Test.HUnit
 import Ella.GenUtils () -- for IsString instance
@@ -23,7 +25,11 @@ postRequest1 = mkRequest [ ("REQUEST_METHOD", "POST")
                          ] pr1_content utf8Encoding
 
 -- multipart/form-data
-pr2_content = "------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"foo\"\r\n\r\nbar\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"baz\"\r\n\r\nfizz\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"foo\"\r\n\r\nbar2\r\n------------------------------6d9817ad0e6b--\r\n"
+pr2_content :: ByteString
+-- NB: The following string literal gets packed into a bytestring
+-- using UTF8, so '\233' ends up as '\195\169' (which later gets
+-- decoded back to '\233', all being well.
+pr2_content = "------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"foo\"\r\n\r\nbar\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"baz\"\r\n\r\n\233\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"\233\"\r\n\r\nz\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"foo\"\r\n\r\nbar2\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"afile\"; filename=\"thefilename\233.txt\"\r\n\r\nThe file contents\233\r\n------------------------------6d9817ad0e6b--\r\n"
 postRequest2 = mkRequest [ ("REQUEST_METHOD", "POST")
                          , ("CONTENT_TYPE", "multipart/form-data; boundary=----------------------------6d9817ad0e6b")
                          , ("CONTENT_LENGTH", show $ BS.length pr2_content)
@@ -56,6 +62,10 @@ test_getPOST_mp  =
     Just "bar2" ~=? getPOST "foo" postRequest2
 test_getPOSTlist_mp =
     ["bar", "bar2"] ~=? getPOSTlist "foo" postRequest2
+test_getPOST_mp2 =
+    Just "\233" ~=? getPOST "baz" postRequest2
+test_getPOST_mp3 =
+    Just "z" ~=? getPOST "\233" postRequest2
 
 -- test that GET and POST are not mixed up
 test_getPOST_postonly = Nothing ~=? getPOST "frobble" postRequest1_b
@@ -75,6 +85,12 @@ test_getGET_6 = Just "z" ~=? getGET "\233" getRequest2
 test_getGETlist_1 = ["v1","v2"] ~=? getGETlist "frobble" getRequest2
 
 
+-- files
+test_files_1 = Just FileInput { fileFilename = "thefilename\233.txt"
+                              , fileContents = "The file contents\233"
+                              , fileContentType = ContentType "text" "plain" []
+                              } ~=? (Map.lookup "afile" $ files postRequest2)
+
 tests = test [
           testMethod
         , testPath
@@ -88,6 +104,8 @@ tests = test [
         , test_getPOSTlist_urlenc
         , test_getPOST_Missing_mp
         , test_getPOST_mp
+        , test_getPOST_mp2
+        , test_getPOST_mp3
         , test_getPOSTlist_mp
         , test_getPOST_postonly
         , test_getGET_1
@@ -97,4 +115,5 @@ tests = test [
         , test_getGET_5
         , test_getGET_6
         , test_getGETlist_1
+        , test_files_1
         ]
