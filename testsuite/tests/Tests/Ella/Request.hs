@@ -8,7 +8,7 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.ByteString.Lazy.Char8 (ByteString)
 import Ella.Request
 import Test.HUnit
-import Ella.GenUtils () -- for IsString instance
+import Ella.GenUtils (utf8)
 
 testMethod = "GET" ~=? requestMethod (mkRequest [("REQUEST_METHOD","GET")] "" utf8Encoding)
 testPath = "foo/bar" ~=? pathInfo (mkRequest [("PATH_INFO", "/foo/bar")] "" utf8Encoding)
@@ -18,7 +18,7 @@ testRequestUriRaw = Just "/root/foo/%C3%A9/" ~=? requestUriRaw (mkRequest [("REQ
                                                                           ,("PATH_INFO","/foo/\195\169/")] "" utf8Encoding)
 
 -- application/x-www-form-urlencoded
-pr1_content = "foo=bar&baz=%C3%A9&foo=bar2&%C3%A9=z"
+pr1_content = utf8 "foo=bar&baz=%C3%A9&foo=bar2&%C3%A9=z"
 postRequest1 = mkRequest [ ("REQUEST_METHOD", "POST")
                          , ("CONTENT_TYPE", "application/x-www-form-urlencoded")
                          , ("CONTENT_LENGTH", show $ BS.length pr1_content)
@@ -26,10 +26,7 @@ postRequest1 = mkRequest [ ("REQUEST_METHOD", "POST")
 
 -- multipart/form-data
 pr2_content :: ByteString
--- NB: The following string literal gets packed into a bytestring
--- using UTF8, so '\233' ends up as '\195\169' (which later gets
--- decoded back to '\233', all being well.
-pr2_content = "------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"foo\"\r\n\r\nbar\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"baz\"\r\n\r\n\233\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"\233\"\r\n\r\nz\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"foo\"\r\n\r\nbar2\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"afile\"; filename=\"thefilename\233.txt\"\r\n\r\nThe file contents\233\r\n------------------------------6d9817ad0e6b--\r\n"
+pr2_content = utf8 "------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"foo\"\r\n\r\nbar\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"baz\"\r\n\r\n\233\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"\233\"\r\n\r\nz\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"foo\"\r\n\r\nbar2\r\n------------------------------6d9817ad0e6b\r\nContent-Disposition: form-data; name=\"afile\"; filename=\"thefilename\233.txt\"\r\n\r\nThe file contents\233\r\n------------------------------6d9817ad0e6b--\r\n"
 postRequest2 = mkRequest [ ("REQUEST_METHOD", "POST")
                          , ("CONTENT_TYPE", "multipart/form-data; boundary=----------------------------6d9817ad0e6b")
                          , ("CONTENT_LENGTH", show $ BS.length pr2_content)
@@ -87,7 +84,7 @@ test_getGETlist_1 = ["v1","v2"] ~=? getGETlist "frobble" getRequest2
 
 -- files
 test_files_1 = Just FileInput { fileFilename = "thefilename\233.txt"
-                              , fileContents = "The file contents\233"
+                              , fileContents = utf8 "The file contents\233"
                               , fileContentType = ContentType "text" "plain" []
                               } ~=? (Map.lookup "afile" $ files postRequest2)
 
