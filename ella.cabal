@@ -1,5 +1,5 @@
 Name:           ella
-Version:        0.1
+Version:        0.1.1
 Description:    Django-inspired web framework
 License:        BSD3
 License-file:   LICENSE
@@ -10,14 +10,14 @@ Build-Type:     Simple
 
 Library
   Build-Depends:
-        base,
-        bytestring,
-        haskell98,
-        containers,
-        utf8-string,
-        xhtml,
-        network,
-        cgi
+        base == 3.*,
+        bytestring >= 0.9.1,
+        haskell98 >= 1.0.1,
+        containers >= 0.1.0,
+        utf8-string >= 0.3.1,
+        xhtml >= 3000,
+        network >= 2.1,
+        cgi >= 3001
   Exposed-Modules:
     Ella.Request, Ella.Response, Ella.GenUtils, Ella.Utils, Ella.Framework,
     Ella.Processors.General
