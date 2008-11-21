@@ -85,9 +85,13 @@ data Request = Request {
     , requestBody :: ByteString -- ^ the body of the HTTP request
     , requestEncoding :: Encoding -- ^ the encoding used to interpret the request
     , _env :: [(String, String)]
-    , allPOST :: [(String, String)] -- ^ all of the POST name-value pairs
+     -- | All of the POST name-value pairs.  Use this if you need to iterate
+     -- through POST variables
+    , allPOST :: [(String, String)]
     , _postInputMap :: Map.Map String String
-    , allGET :: [(String, String)] -- ^ all of the GET name-value pairs
+    -- | All of the GET name-value pairs.  Use this if you need to iterate
+    -- through GET variables
+    , allGET :: [(String, String)]
     , _getInputMap :: Map.Map String String
     , files :: Map.Map String FileInput -- ^ a map of all uploaded files
     } deriving (Show, Eq)
@@ -182,15 +186,18 @@ getPOST name req = Map.lookup name $ _postInputMap req
 
 -- | Retrieve all the POST values with the given name
 --
--- This is needed if values are submitted with the same name
+-- This is needed if values are submitted with the same name e.g. for
+-- handling HTML SELECT elements
 getPOSTlist :: String -> Request -> [String]
 getPOSTlist name req = getMatching name (allPOST req)
 
--- | Retrieve a single query string value
+-- | Retrieve a single query string value (last one wins if there are multiple)
 getGET :: (Monad m) => String -> Request -> m String
 getGET name req = Map.lookup name $ _getInputMap req
 
 -- | Retrieve all the query string values with the given name
+--
+-- This is needed if values are submitted with the same name
 getGETlist :: String -> Request -> [String]
 getGETlist name req = getMatching name (allGET req)
 
