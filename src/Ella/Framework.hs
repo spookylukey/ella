@@ -43,12 +43,12 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 
 -- $dispatching
 --
--- The main entry point for handling CGI requests is 'dispatchCGI'. 
--- This creates a Request object according to the CGI protocol, 
--- dispatches it to a list of views, returning a 404 if no view matches.
--- This process can be customised using 'DispatchOptions'.  A set of
--- defaults for this is provided, 'defaultDispatchOptions', which can
--- be used as a starting point and customised as needed.
+-- The main entry point for handling CGI requests is 'dispatchCGI'.
+-- This creates a Request object according to the CGI protocol,
+-- dispatches it to a list of views, returning a 404 if no view
+-- matches.  This process can be customised using 'DispatchOptions'.
+-- A set of defaults for this is provided, 'defaultDispatchOptions',
+-- which can be used as a starting point and customised as needed.
 --
 -- 'dispatchCGI' does not do any error handling.  Since the type of
 -- any error handling function will depend on the libraries being
@@ -287,5 +287,11 @@ route matcher f decs =
                  Just (remainder, view, req') -> if null remainder
                                                  then (apply decs view) req'
                                                  else return Nothing
+
 -- | Alias for 'route', see above examples.
+(//->) :: (PartMatch a -> Maybe (PartMatch View))
+          -> a
+          -> [View -> View]
+          -> Request
+          -> IO (Maybe Response)
 (//->) = route
