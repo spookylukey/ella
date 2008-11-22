@@ -5,7 +5,6 @@ where
 
 import Data.Maybe (fromJust)
 import Ella.Processors.General
-import Ella.GenUtils ()
 import Ella.Response
 import Ella.Request
 import Test.HUnit
