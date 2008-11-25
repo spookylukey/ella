@@ -22,3 +22,10 @@ apply fs init = foldl (flip ($)) init fs
 -- | Same as apply with arguments flipped
 with :: a -> [a -> a] -> a
 with = flip apply
+
+-- | Parse a value, or fail if the entire string cannot be parsed
+exactParse :: (Read a, Monad m) => String -> m a
+exactParse s =
+  case reads s of
+    [(val, "")] -> return val
+    otherwise -> fail ("Cannot parse '" ++ s ++ "'")

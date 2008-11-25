@@ -33,7 +33,7 @@ where
 
 import Control.Monad ((>=>))
 import Data.List (isPrefixOf)
-import Ella.GenUtils (apply, utf8)
+import Ella.GenUtils (apply, utf8, exactParse)
 import Ella.Response
 import Ella.Request
 import System.IO (stdout, hClose)
@@ -250,10 +250,8 @@ stringParam (path, f, r) = do
 intParam :: PartMatch (Int -> a) -> Maybe (PartMatch a)
 intParam (path, f, r) = do
   (chunk, rest) <- nextChunk path
-  let parses = reads chunk :: [(Int, String)]
-  case parses of
-    [(val, "")] -> Just (rest, f val, r)
-    otherwise -> Nothing
+  val <- exactParse chunk
+  Just (rest, f val, r)
 
 -- | Combine two matchers
 (</>) :: (PartMatch a -> Maybe (PartMatch b)) -- ^ LH matcher
