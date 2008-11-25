@@ -22,6 +22,7 @@ module Ella.Framework (
                      , fixedString
                      , intParam
                      , stringParam
+                     , anyParam
                      , anyPath
                      , empty
                      , (</>)
@@ -144,6 +145,7 @@ dispatchCGI views opts = do
 -- >          , "test/" <+/> intParam                  //-> viewWithIntParam          $ []
 -- >          , intParam </> stringParam               //-> viewWithIntAndStringParam $ []
 -- >          , intParam </> stringParam </> intParam  //-> viewWithIntStringInt      $ []
+-- >          , anyParam </> anyParam          //-> viewWith2Params           $ []
 -- >          ]
 --
 -- where:
@@ -153,6 +155,7 @@ dispatchCGI views opts = do
 -- >  viewWithIntParam :: Int -> Request -> IO (Maybe Response)
 -- >  viewWithIntAndStringParam :: Int -> String -> Request -> IO (Maybe Response)
 -- >  viewWithIntStringInt :: Int -> String -> Int -> Request -> IO (Maybe Response)
+-- >  viewWith2Params :: (Read t1, Read t2) => t1 -> t2 -> Request -> IO (Maybe Response)
 -- >  decs :: [View -> View]
 --
 -- These would correspond to URLs like the following:
@@ -165,6 +168,8 @@ dispatchCGI views opts = do
 -- > /test/123/        123 captured
 -- > /123/abc7/        123 and "abc7" captured
 -- > /123/abc7/456/    123, "abc7" and 456 captured
+-- > /<v1>/<v2>/       <v1> and <v2> stand for some values whose types are
+-- >                   determined by the function viewWith2Params
 --
 -- The right hand argument of '//->' is a 'view like' function, of type
 -- 'View' OR @a -> 'View'@ OR @a -> b -> 'View'@ etc,
@@ -248,7 +253,17 @@ stringParam (path, f, r) = do
 
 -- | Matcher that captures an integer component followed by a forward slash
 intParam :: PartMatch (Int -> a) -> Maybe (PartMatch a)
-intParam (path, f, r) = do
+intParam = anyParam
+
+-- | Matcher that matches any Readable component, followed by a forward slash.
+--
+-- NOTE: This relies on 'Read', which means it cannot be used as a
+-- replacment for stringParam, since 'read :: String -> String'
+-- expects strings to be wrapped in quotes. It is therefore better to
+-- define aliases for anyParam which have the typed fixed, and then
+-- use these in route definitions, rather than use anyParam directly.
+anyParam :: (Read t) => PartMatch (t -> a) -> Maybe (PartMatch a)
+anyParam (path, f, r) = do
   (chunk, rest) <- nextChunk path
   val <- exactParse chunk
   Just (rest, f val, r)
