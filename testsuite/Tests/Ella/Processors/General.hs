@@ -16,6 +16,16 @@ testAddSlashRedirectView1 =
       return (resp == (Just $ redirectResponse "/posts/"))
     ) ~? "addSlashRedirectView should add a slash if not present at end"
 
+testAddSlashRedirectView1_1 =
+    (do
+      resp <- addSlashRedirectView (mkRequest
+                                    [("REQUEST_METHOD", "GET")
+                                    ,("PATH_INFO", "/posts")
+                                    ,("REQUEST_URI","/posts?p=2")]
+                                    "" utf8Encoding)
+      return (resp == (Just $ redirectResponse "/posts/?p=2"))
+    ) ~? "addSlashRedirectView should add a slash if not present before query string"
+
 
 testAddSlashRedirectView2 =
     (do
@@ -36,6 +46,7 @@ testAddSlashRedirectView3 =
 
 
 tests = test [ testAddSlashRedirectView1
+             , testAddSlashRedirectView1_1
              , testAddSlashRedirectView2
              , testAddSlashRedirectView3
              ]
