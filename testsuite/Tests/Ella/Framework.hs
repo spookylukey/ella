@@ -102,7 +102,7 @@ routes = [
          , intParam </+> "test/"                  //-> viewWithIntParam2          $ []
          , "test/" <+/> intParam                  //-> viewWithIntParam2          $ []
          -- NB line below has to come after 'intParam </+> "test/"' line
-         , anyParam </> stringParam               //-> viewWithIntAndStringParam1 $ []
+         , anyParam </> anyParam                  //-> viewWithIntAndStringParam1 $ []
          , intParam </> stringParam </> intParam  //-> viewWithIntStringInt1      $ []
          ]
 

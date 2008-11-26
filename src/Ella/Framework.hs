@@ -20,9 +20,9 @@ module Ella.Framework (
                      , PartMatch
                      -- $matchers
                      , fixedString
+                     , anyParam
                      , intParam
                      , stringParam
-                     , anyParam
                      , anyPath
                      , empty
                      , (</>)
@@ -35,6 +35,7 @@ where
 import Control.Monad ((>=>))
 import Data.List (isPrefixOf)
 import Ella.GenUtils (apply, utf8, exactParse)
+import Ella.Param
 import Ella.Response
 import Ella.Request
 import System.IO (stdout, hClose)
@@ -143,9 +144,8 @@ dispatchCGI views opts = do
 -- >          , stringParam                            //-> viewWithStringParam       $ []
 -- >          , intParam </+> "test/"                  //-> viewWithIntParam          $ []
 -- >          , "test/" <+/> intParam                  //-> viewWithIntParam          $ []
--- >          , intParam </> stringParam               //-> viewWithIntAndStringParam $ []
+-- >          , anyParam </> anyParam                  //-> viewWithIntAndStringParam $ []
 -- >          , intParam </> stringParam </> intParam  //-> viewWithIntStringInt      $ []
--- >          , anyParam </> anyParam          //-> viewWith2Params           $ []
 -- >          ]
 --
 -- where:
@@ -155,7 +155,6 @@ dispatchCGI views opts = do
 -- >  viewWithIntParam :: Int -> Request -> IO (Maybe Response)
 -- >  viewWithIntAndStringParam :: Int -> String -> Request -> IO (Maybe Response)
 -- >  viewWithIntStringInt :: Int -> String -> Int -> Request -> IO (Maybe Response)
--- >  viewWith2Params :: (Read t1, Read t2) => t1 -> t2 -> Request -> IO (Maybe Response)
 -- >  decs :: [View -> View]
 --
 -- These would correspond to URLs like the following:
@@ -168,8 +167,6 @@ dispatchCGI views opts = do
 -- > /test/123/        123 captured
 -- > /123/abc7/        123 and "abc7" captured
 -- > /123/abc7/456/    123, "abc7" and 456 captured
--- > /<v1>/<v2>/       <v1> and <v2> stand for some values whose types are
--- >                   determined by the function viewWith2Params
 --
 -- The right hand argument of '//->' is a 'view like' function, of type
 -- 'View' OR @a -> 'View'@ OR @a -> b -> 'View'@ etc,
@@ -190,14 +187,26 @@ dispatchCGI views opts = do
 --
 -- > fixedString "thestring/"
 --
--- The result of the '//->' operator needs to be applied to a list of \'view
--- decorator\' functions, (which may be an empty list) e.g. \'decs\'
--- above.  These decorators take a View and return a View, or
--- alternatively they take a View and a Request and return an IO
--- (Maybe Response).  These means they can be used to do
--- pre-processing of the request, and post-processing of the response.
+-- The result of the '//->' operator needs to be applied to a list of
+-- \'view decorator\' functions, (which may be an empty list)
+-- e.g. \'decs\' above.  These decorators take a View and return a
+-- View, or alternatively they can be considered to take a View and a
+-- Request and return an IO (Maybe Response).  These means they can be
+-- used to do pre-processing of the request, and post-processing of
+-- the response.
 --
--- The routing mechanism is extensible -- just define your own matchers.
+-- The routing mechanism is extensible in the types of parameters that
+-- can be captured.  The easiest way is to define instances of
+-- 'Param', and then use anyParam.  For more complex needs, for
+-- example if you do not want the component to end in a forward slash,
+-- just define your own matchers.
+--
+-- When defining routes as above, choosing 'anyParam' instead of
+-- 'intParam' or 'stringParam' will produce exactly the same result.
+-- With 'anyParam', the type will be determined by type inference.
+-- With 'stringParam' etc., you are repeating the type information,
+-- which is a DRY violation, but it may be useful for clarity, and you
+-- will get a compilation error in the case of any mismatch.
 --
 -- NB. The Request object trims any leading slash on the path to normalise
 -- it, and also to simplify this parsing stage, so do not attempt to match
@@ -236,7 +245,7 @@ empty :: PartMatch a -> Maybe (PartMatch a)
 empty = Just
 
 
--- | matcher that matches any remaining path
+-- | Matcher that matches any remaining path
 anyPath :: PartMatch a -> Maybe (PartMatch a)
 anyPath (path, f, r) = Just ("", f, r)
 
@@ -245,28 +254,27 @@ nextChunk path = let (start, end) = break (== '/') path
                       [] -> Nothing
                       x:rest -> Just (start, rest)
 
--- | Matcher that captures a string component followed by a forward slash
-stringParam :: PartMatch (String -> a) -> Maybe (PartMatch a)
-stringParam (path, f, r) = do
-  (chunk, rest) <- nextChunk path
-  Just (rest, f chunk, r)
-
--- | Matcher that captures an integer component followed by a forward slash
-intParam :: PartMatch (Int -> a) -> Maybe (PartMatch a)
-intParam = anyParam
-
--- | Matcher that matches any Readable component, followed by a forward slash.
+-- | Matcher that matches any instance of Param followed by a forward slash.
 --
--- NOTE: This relies on 'Read', which means it cannot be used as a
--- replacment for stringParam, since 'read :: String -> String'
--- expects strings to be wrapped in quotes. It is therefore better to
--- define aliases for anyParam which have the typed fixed, and then
--- use these in route definitions, rather than use anyParam directly.
-anyParam :: (Read t) => PartMatch (t -> a) -> Maybe (PartMatch a)
+-- If anyParam is used, the concrete type will be determined by type
+-- inference from the view function.
+anyParam :: (Param t) => PartMatch (t -> a) -> Maybe (PartMatch a)
 anyParam (path, f, r) = do
   (chunk, rest) <- nextChunk path
-  val <- exactParse chunk
+  val <- capture chunk
   Just (rest, f val, r)
+
+-- | Matcher that captures a string component followed by a forward slash
+--
+-- This is anyParam specialised to strings
+stringParam :: PartMatch (String -> a) -> Maybe (PartMatch a)
+stringParam = anyParam
+
+-- | Matcher that captures an integer component followed by a forward slash
+--
+-- This is anyParam specialised to ints
+intParam :: PartMatch (Int -> a) -> Maybe (PartMatch a)
+intParam = anyParam
 
 -- | Combine two matchers
 (</>) :: (PartMatch a -> Maybe (PartMatch b)) -- ^ LH matcher
