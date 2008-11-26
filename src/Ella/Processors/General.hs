@@ -50,5 +50,8 @@ addSlashRedirectView req =
     in return $ case uri of
                   Nothing ->  Nothing -- Can't do a redirect if we don't know original URI
                   Just "" ->  Nothing -- Don't redirect if empty
-                  Just x | ("/" `isSuffixOf` x) -> Nothing -- slash is already there
-                  Just x  ->  Just $ redirectResponse (x ++ "/")
+                  Just x  ->
+                      let (path, qs) = span (/= '?') x
+                      in if ("/" `isSuffixOf` path)
+                         then Nothing -- slash is already there
+                         else Just $ redirectResponse (path ++ "/" ++ qs)
