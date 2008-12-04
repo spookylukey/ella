@@ -29,3 +29,8 @@ exactParse s =
   case reads s of
     [(val, "")] -> return val
     otherwise -> fail ("Cannot parse '" ++ s ++ "'")
+
+-- | Converts empty string to Nothing, everything else wrapped in Just
+nullToNothing :: String -> Maybe String
+nullToNothing "" = Nothing
+nullToNothing x  = Just x
