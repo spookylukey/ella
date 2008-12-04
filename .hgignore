@@ -7,4 +7,4 @@
 ^src/blog.php$
 ^dist/
 ^testsuite/test.db$
-\.#.*
+\.\#.*
