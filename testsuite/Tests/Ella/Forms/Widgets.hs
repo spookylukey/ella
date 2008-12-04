@@ -10,7 +10,7 @@ import Ella.Forms.Widgets
 render :: (X.HTML a) => a -> String
 render = X.showHtmlFragment . X.toHtml
 
-fullTextInput =  TextInput { defaultVal = "foo"
+fullTextInput =  TextInput { value = "foo"
                            , size = Just 10
                            , maxlength = Just 20
                            , name = "aname"
@@ -18,7 +18,7 @@ fullTextInput =  TextInput { defaultVal = "foo"
                            }
 
 testTextInputRender_1 = "<input type=\"text\" name=\"\" value=\"\" />" ~=? render emptyTextInput
-testTextInputRender_2 = "<input type=\"text\" name=\"foo\" value=\"foo\" />" ~=? (render $ emptyTextInput { defaultVal = "foo", name = "foo" })
+testTextInputRender_2 = "<input type=\"text\" name=\"foo\" value=\"foo\" />" ~=? (render $ emptyTextInput { value = "foo", name = "foo" })
 testTextInputRender_3 = "<input type=\"text\" name=\"aname\" value=\"foo\" id=\"anid\" maxlength=\"20\" size=\"10\" />" ~=? (render fullTextInput)
 testTextInputAddAttributes_1 = "<input type=\"text\" name=\"\" value=\"\" class=\"foo\" />" ~=?
                                (X.showHtmlFragment $ (X.toHtml emptyTextInput) ! [X.theclass "foo"])

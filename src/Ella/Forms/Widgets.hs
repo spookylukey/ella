@@ -17,7 +17,7 @@ class HasId a where
 
 -- Widgets --
 data TextInput = TextInput {
-      defaultVal :: String
+      value :: String
     , maxlength :: Maybe Int
     , size :: Maybe Int
     , name :: String
@@ -25,7 +25,7 @@ data TextInput = TextInput {
     }
 
 
-emptyTextInput = TextInput { defaultVal = ""
+emptyTextInput = TextInput { value = ""
                            , maxlength = Nothing
                            , size = Nothing
                            , name = ""
@@ -42,7 +42,7 @@ data Label a = Label {
 instance X.HTML TextInput where
     toHtml t = let attrs =  [ X.thetype "text"
                             , X.name $ name t
-                            , X.value $ defaultVal t ] ++
+                            , X.value $ value t ] ++
                           catMaybes [ liftM X.identifier $ identifier t
                                     , liftM X.maxlength $ maxlength t
                                     , liftM (X.size . show) $ size t
