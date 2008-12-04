@@ -14,7 +14,7 @@ fullTextInput =  TextInput { value = "foo"
                            , size = Just 10
                            , maxlength = Just 20
                            , name = "aname"
-                           , identifier = Just "anid"
+                           , identifier = "anid"
                            }
 
 testTextInputRender_1 = "<input type=\"text\" name=\"\" value=\"\" />" ~=? render emptyTextInput

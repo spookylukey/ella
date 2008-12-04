@@ -1,3 +1,4 @@
+{-# LANGUAGE DisambiguateRecordFields #-}
 module Ella.Forms.Widgets where
 
 import Control.Monad (liftM)
@@ -11,17 +12,15 @@ import Text.XHtml ( (<<)
 -- Classes --
 class HasId a where
     setId :: String -> a -> a
-    getId :: a -> Maybe String
-    removeId :: a -> a
-
+    getId :: a -> String
 
 -- Widgets --
 data TextInput = TextInput {
       value :: String
+    , name :: String
+    , identifier :: String
     , maxlength :: Maybe Int
     , size :: Maybe Int
-    , name :: String
-    , identifier :: Maybe String
     }
 
 
@@ -29,7 +28,7 @@ emptyTextInput = TextInput { value = ""
                            , maxlength = Nothing
                            , size = Nothing
                            , name = ""
-                           , identifier = Nothing
+                           , identifier = ""
                            }
 
 data Label a = Label {
@@ -38,12 +37,14 @@ data Label a = Label {
     }
 
 -- HTML instances --
+nullToNothing "" = Nothing
+nullToNothing x  = Just x
 
 instance X.HTML TextInput where
     toHtml t = let attrs =  [ X.thetype "text"
                             , X.name $ name t
                             , X.value $ value t ] ++
-                          catMaybes [ liftM X.identifier $ identifier t
+                          catMaybes [ liftM X.identifier $ nullToNothing $ identifier t
                                     , liftM X.maxlength $ maxlength t
                                     , liftM (X.size . show) $ size t
                                     ]
@@ -53,16 +54,15 @@ instance (HasId a) => X.HTML (Label a) where
     toHtml l = let attrs = case control l of
                              Nothing -> []
                              Just c -> case getId c of
-                                         Nothing -> []
-                                         Just theid -> [ X.thefor theid ]
+                                         "" -> []
+                                         theid -> [ X.thefor theid ]
                in X.label ! attrs << text l
 
 -- HasId instances
 
 instance HasId TextInput where
-    setId theid t = t { identifier = Just theid }
+    setId theid t = t { identifier = theid }
     getId t = identifier t
-    removeId t = t { identifier = Nothing }
 
 
 -- Utilities
