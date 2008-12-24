@@ -42,30 +42,30 @@ postRequest1_b = mkRequest [ ("REQUEST_METHOD", "POST")
 
 -- application/x-www-form-urlencoded
 test_getPOST_Missing_urlenc =
-    Nothing ~=? getPOST "test" postRequest1
+    Nothing ~=? getPOST postRequest1 "test"
 test_getPOST_urlenc  =
-    Just "bar2" ~=? getPOST "foo" postRequest1
+    Just "bar2" ~=? getPOST postRequest1 "foo"
 test_getPOST_urlenc2 =
-    Just "\233" ~=? getPOST "baz" postRequest1
+    Just "\233" ~=? getPOST postRequest1 "baz"
 test_getPOST_urlenc3 =
-    Just "z" ~=? getPOST "\233" postRequest1
+    Just "z" ~=? getPOST postRequest1 "\233"
 test_getPOSTlist_urlenc =
-    ["bar", "bar2"] ~=? getPOSTlist "foo" postRequest1
+    ["bar", "bar2"] ~=? getPOSTlist postRequest1 "foo"
 
 -- multipart/form-data
 test_getPOST_Missing_mp =
-    Nothing ~=? getPOST "test" postRequest2
+    Nothing ~=? getPOST postRequest2 "test"
 test_getPOST_mp  =
-    Just "bar2" ~=? getPOST "foo" postRequest2
+    Just "bar2" ~=? getPOST postRequest2 "foo"
 test_getPOSTlist_mp =
-    ["bar", "bar2"] ~=? getPOSTlist "foo" postRequest2
+    ["bar", "bar2"] ~=? getPOSTlist postRequest2 "foo"
 test_getPOST_mp2 =
-    Just "\233" ~=? getPOST "baz" postRequest2
+    Just "\233" ~=? getPOST postRequest2 "baz"
 test_getPOST_mp3 =
-    Just "z" ~=? getPOST "\233" postRequest2
+    Just "z" ~=? getPOST postRequest2 "\233"
 
 -- test that GET and POST are not mixed up
-test_getPOST_postonly = Nothing ~=? getPOST "frobble" postRequest1_b
+test_getPOST_postonly = Nothing ~=? getPOST postRequest1_b "frobble"
 
 
 -- getGET --
@@ -73,13 +73,13 @@ getRequest1 = mkRequest [("REQUEST_METHOD", "GET")] "" utf8Encoding
 getRequest2 = mkRequest [("REQUEST_METHOD", "GET")
                         ,("QUERY_STRING", "frobble=v1&foo=bar&baz=%C3%A9&frobble=v2&%C3%A9=z")] "" utf8Encoding
 
-test_getGET_1 = Nothing ~=? getGET "x" getRequest1
-test_getGET_2 = Nothing ~=? getGET "x" getRequest2
-test_getGET_3 = Just "bar" ~=? getGET "foo" getRequest2
-test_getGET_4 = Just "v2" ~=? getGET "frobble" getRequest2
-test_getGET_5 = Just "\233" ~=? getGET "baz" getRequest2
-test_getGET_6 = Just "z" ~=? getGET "\233" getRequest2
-test_getGETlist_1 = ["v1","v2"] ~=? getGETlist "frobble" getRequest2
+test_getGET_1 = Nothing ~=? getGET getRequest1 "x"
+test_getGET_2 = Nothing ~=? getGET getRequest2 "x"
+test_getGET_3 = Just "bar" ~=? getGET getRequest2 "foo"
+test_getGET_4 = Just "v2" ~=? getGET getRequest2 "frobble"
+test_getGET_5 = Just "\233" ~=? getGET getRequest2 "baz"
+test_getGET_6 = Just "z" ~=? getGET getRequest2 "\233"
+test_getGETlist_1 = ["v1","v2"] ~=? getGETlist getRequest2 "frobble"
 
 
 -- files

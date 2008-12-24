@@ -181,25 +181,25 @@ escapePathWithEnc :: String -> Encoding -> String
 escapePathWithEnc s enc = escapePath (encoder enc $ s)
 
 -- | Retrieve a single POST value
-getPOST :: (Monad m) => String -> Request -> m String
-getPOST name req = Map.lookup name $ _postInputMap req
+getPOST :: (Monad m) => Request -> String -> m String
+getPOST req name = Map.lookup name $ _postInputMap req
 
 -- | Retrieve all the POST values with the given name
 --
 -- This is needed if values are submitted with the same name e.g. for
 -- handling HTML SELECT elements
-getPOSTlist :: String -> Request -> [String]
-getPOSTlist name req = getMatching name (allPOST req)
+getPOSTlist :: Request -> String -> [String]
+getPOSTlist req name = getMatching name (allPOST req)
 
 -- | Retrieve a single query string value (last one wins if there are multiple)
-getGET :: (Monad m) => String -> Request -> m String
-getGET name req = Map.lookup name $ _getInputMap req
+getGET :: (Monad m) => Request -> String -> m String
+getGET req name = Map.lookup name $ _getInputMap req
 
 -- | Retrieve all the query string values with the given name
 --
 -- This is needed if values are submitted with the same name
-getGETlist :: String -> Request -> [String]
-getGETlist name req = getMatching name (allGET req)
+getGETlist :: Request -> String -> [String]
+getGETlist req name = getMatching name (allGET req)
 
 
 -- Much of the following is taken mainly from CGI.Protocol, with
