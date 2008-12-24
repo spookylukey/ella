@@ -20,5 +20,7 @@ Library
         cgi >= 3001
   Exposed-Modules:
     Ella.Request, Ella.Response, Ella.GenUtils, Ella.Utils, Ella.Framework,
-    Ella.Processors.General, Ella.Param, Ella.Forms.Widgets
+    Ella.Processors.General, Ella.Param, Ella.Forms.Widgets,
+    Ella.Forms.Base, Ella.Forms.Widgets.TextInput, Ella.Forms.Widgets.Textarea
+
   hs-source-dirs: src
