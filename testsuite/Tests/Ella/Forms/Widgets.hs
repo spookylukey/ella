@@ -38,6 +38,9 @@ testTextareaRender_2 = "<textarea name=\"test\" id=\"abc\" cols=\"3\">&lt;hmm&gt
                                              , name = "test"
                                              })
 
+testValTextInput = "xyz" ~=? (getVal $ setVal "xyz" TI.emptyTextInput)
+testValTextarea = "abcd\nfoo" ~=? (getVal $ setVal "abcd\nfoo" TA.emptyTextarea)
+
 tests = test [ testTextInputRender_1
              , testTextInputRender_2
              , testTextInputRender_3
@@ -46,4 +49,6 @@ tests = test [ testTextInputRender_1
              , testLabelRender
              , testTextareaRender_1
              , testTextareaRender_2
+             , testValTextInput
+             , testValTextarea
              ]

@@ -1,4 +1,4 @@
-{-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE DisambiguateRecordFields, MultiParamTypeClasses, TypeSynonymInstances #-}
 module Ella.Forms.Widgets.TextInput where
 
 import Control.Monad (liftM)
@@ -41,3 +41,7 @@ instance X.HTML TextInput where
 instance HasId TextInput where
     setId theid t = t { identifier = theid }
     getId t = identifier t
+
+instance HasVal TextInput String where
+    setVal val t = t { value = val }
+    getVal t = value t

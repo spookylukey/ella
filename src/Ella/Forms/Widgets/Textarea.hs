@@ -1,4 +1,4 @@
-{-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE DisambiguateRecordFields, MultiParamTypeClasses, TypeSynonymInstances #-}
 module Ella.Forms.Widgets.Textarea where
 
 import Control.Monad (liftM)
@@ -35,3 +35,7 @@ instance X.HTML Textarea where
                                    , liftM (X.rows . show) $ rows t
                                    ]
                in X.textarea ! attrs << (value t)
+
+instance HasVal Textarea String where
+    setVal val t = t { value = val }
+    getVal t = value t
