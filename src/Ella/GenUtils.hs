@@ -13,15 +13,15 @@ import GHC.Exts( IsString(..) )
 utf8 :: String -> ByteString
 utf8 = UTF8.fromString
 
--- | Apply a list of transformation functions to an object
+-- | Apply a list of transformation functions to a value
 apply :: [a -> a] -- ^ List of functions
       -> a        -- ^ Initial value
       -> a
-apply fs init = foldl (flip ($)) init fs
+apply = flip with
 
 -- | Same as apply with arguments flipped
 with :: a -> [a -> a] -> a
-with = flip apply
+with = foldl (flip ($))
 
 -- | Parse a value, or fail if the entire string cannot be parsed
 exactParse :: (Read a, Monad m) => String -> m a
