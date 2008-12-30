@@ -9,6 +9,7 @@ import Text.XHtml ((!))
 import Ella.Forms.Base
 import Ella.Forms.Widgets
 import qualified Ella.Forms.Widgets.RadioButton as RB
+import qualified Ella.Forms.Widgets.RadioButtonList as RBL
 import qualified Ella.Forms.Widgets.TextInput as TI
 import qualified Ella.Forms.Widgets.Textarea as TA
 
@@ -42,19 +43,33 @@ testTextareaRender_2 = "<textarea name=\"test\" id=\"abc\" cols=\"3\">&lt;hmm&gt
 testValTextInput = "xyz" ~=? (getVal $ setVal "xyz" TI.emptyTextInput)
 testValTextarea = "abcd\nfoo" ~=? (getVal $ setVal "abcd\nfoo" TA.emptyTextarea)
 
-testRadioButtonsRender = "<input type=\"radio\" name=\"foo\" value=\"val1\" id=\"id_foo\" />" ~=?
+testRadioButtonRender = "<input type=\"radio\" name=\"foo\" value=\"val1\" id=\"id_foo\" />" ~=?
                          (render $ RB.RadioButton { value = "val1"
                                                   , name = "foo"
                                                   , identifier = "id_foo"
                                                   , checked = False
                                                   })
 
-testRadioButtonsRender2 = "<input type=\"radio\" name=\"foo\" value=\"val1\" id=\"id_foo\" checked=\"checked\" />" ~=?
+testRadioButtonRender2 = "<input type=\"radio\" name=\"foo\" value=\"val1\" id=\"id_foo\" checked=\"checked\" />" ~=?
                           (render $ RB.RadioButton { value = "val1"
                                                    , name = "foo"
                                                    , identifier = "id_foo"
                                                    , checked = True
                                                    })
+
+testRadioButtonListRender = ("<label>" ++
+                             "<input type=\"radio\" name=\"foo\" value=\"val1\" id=\"id_foo_0\" checked=\"checked\" />" ++
+                             " Label 1</label><br />" ++
+                             "<label>" ++
+                             "<input type=\"radio\" name=\"foo\" value=\"val2\" id=\"id_foo_1\" />" ++
+                             " Label 2</label><br />") ~=?
+                            (render $ RBL.RadioButtonList { value = "val1"
+                                                          , name = "foo"
+                                                          , identifier = "id_foo"
+                                                          , values = ["val1", "val2"]
+                                                          , captions = map X.toHtml ["Label 1", "Label 2"]
+                                                          })
+
 
 tests = test [ testTextInputRender_1
              , testTextInputRender_2
@@ -66,6 +81,7 @@ tests = test [ testTextInputRender_1
              , testTextareaRender_2
              , testValTextInput
              , testValTextarea
-             , testRadioButtonsRender
-             , testRadioButtonsRender2
+             , testRadioButtonRender
+             , testRadioButtonRender2
+             , testRadioButtonListRender
              ]
