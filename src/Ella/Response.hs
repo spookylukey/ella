@@ -23,7 +23,7 @@ module Ella.Response (
 import Data.ByteString.Lazy.Char8 (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.List (intersperse)
-import Network.CGI.Protocol (Headers, HeaderName(HeaderName))
+import Ella.CGI.Header (Headers, HeaderName(HeaderName))
 import Network.CGI (ContentType(ContentType), showContentType)
 import Ella.GenUtils (apply)
 

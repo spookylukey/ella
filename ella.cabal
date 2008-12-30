@@ -1,5 +1,5 @@
 Name:           ella
-Version:        0.1.1
+Version:        0.1.2
 Description:    Django-inspired web framework
 License:        BSD3
 License-file:   LICENSE
@@ -22,7 +22,9 @@ Library
   Exposed-Modules:
     Ella.Request, Ella.Response, Ella.GenUtils, Ella.Utils, Ella.Framework,
     Ella.Processors.General, Ella.Param, Ella.Forms.Widgets,
-    Ella.Forms.Base, Ella.Forms.Widgets.TextInput, Ella.Forms.Widgets.Textarea, 
+    Ella.Forms.Base, Ella.Forms.Widgets.TextInput, Ella.Forms.Widgets.Textarea,
     Ella.Forms.Widgets.RadioButton, Ella.Forms.Widgets.RadioButtonList
+  Other-Modules:
+    Ella.CGI.Header, Ella.CGI.Multipart
 
   hs-source-dirs: src
