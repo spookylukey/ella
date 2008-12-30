@@ -38,8 +38,7 @@ import Data.List (partition)
 import qualified Data.Map as Map
 import Data.Maybe
 import Network.CGI.Protocol (takeInput, formDecode)
-import Network.CGI.Multipart
-import Network.CGI.Header
+import Ella.CGI.Multipart
 import Network.URI (escapeURIString, isUnescapedInURI)
 import System.Environment (getEnvironment)
 import System.IO (stdin)

@@ -17,6 +17,7 @@ Library
         utf8-string >= 0.3.1,
         xhtml >= 3000,
         network >= 2.1,
+        parsec >= 2.3,
         cgi >= 3001
   Exposed-Modules:
     Ella.Request, Ella.Response, Ella.GenUtils, Ella.Utils, Ella.Framework,
