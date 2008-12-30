@@ -8,6 +8,7 @@ import qualified Text.XHtml as X
 import Text.XHtml ((!))
 import Ella.Forms.Base
 import Ella.Forms.Widgets
+import qualified Ella.Forms.Widgets.RadioButton as RB
 import qualified Ella.Forms.Widgets.TextInput as TI
 import qualified Ella.Forms.Widgets.Textarea as TA
 
@@ -41,6 +42,20 @@ testTextareaRender_2 = "<textarea name=\"test\" id=\"abc\" cols=\"3\">&lt;hmm&gt
 testValTextInput = "xyz" ~=? (getVal $ setVal "xyz" TI.emptyTextInput)
 testValTextarea = "abcd\nfoo" ~=? (getVal $ setVal "abcd\nfoo" TA.emptyTextarea)
 
+testRadioButtonsRender = "<input type=\"radio\" name=\"foo\" value=\"val1\" id=\"id_foo\" />" ~=?
+                         (render $ RB.RadioButton { value = "val1"
+                                                  , name = "foo"
+                                                  , identifier = "id_foo"
+                                                  , checked = False
+                                                  })
+
+testRadioButtonsRender2 = "<input type=\"radio\" name=\"foo\" value=\"val1\" id=\"id_foo\" checked=\"checked\" />" ~=?
+                          (render $ RB.RadioButton { value = "val1"
+                                                   , name = "foo"
+                                                   , identifier = "id_foo"
+                                                   , checked = True
+                                                   })
+
 tests = test [ testTextInputRender_1
              , testTextInputRender_2
              , testTextInputRender_3
@@ -51,4 +66,6 @@ tests = test [ testTextInputRender_1
              , testTextareaRender_2
              , testValTextInput
              , testValTextarea
+             , testRadioButtonsRender
+             , testRadioButtonsRender2
              ]
