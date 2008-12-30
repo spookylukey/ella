@@ -22,6 +22,7 @@ Library
   Exposed-Modules:
     Ella.Request, Ella.Response, Ella.GenUtils, Ella.Utils, Ella.Framework,
     Ella.Processors.General, Ella.Param, Ella.Forms.Widgets,
-    Ella.Forms.Base, Ella.Forms.Widgets.TextInput, Ella.Forms.Widgets.Textarea
+    Ella.Forms.Base, Ella.Forms.Widgets.TextInput, Ella.Forms.Widgets.Textarea, 
+    Ella.Forms.Widgets.RadioButton, Ella.Forms.Widgets.RadioButtonList
 
   hs-source-dirs: src
