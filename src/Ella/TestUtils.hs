@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Tests.Ella.TestUtils where
+module Ella.TestUtils where
 
 import Ella.Framework
 import Ella.GenUtils (utf8)

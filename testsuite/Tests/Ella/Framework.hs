@@ -9,7 +9,7 @@ import Ella.GenUtils (utf8)
 import Ella.Request
 import Ella.Response
 import Test.HUnit
-import Tests.Ella.TestUtils (mkGetReq)
+import Ella.TestUtils (mkGetReq)
 import qualified Data.ByteString.Lazy.Char8 as BS
 
 req1 = mkGetReq "/posts/"

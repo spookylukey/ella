@@ -23,7 +23,8 @@ Library
     Ella.Request, Ella.Response, Ella.GenUtils, Ella.Utils, Ella.Framework,
     Ella.Processors.General, Ella.Param, Ella.Forms.Widgets,
     Ella.Forms.Base, Ella.Forms.Widgets.TextInput, Ella.Forms.Widgets.Textarea,
-    Ella.Forms.Widgets.RadioButton, Ella.Forms.Widgets.RadioButtonList
+    Ella.Forms.Widgets.RadioButton, Ella.Forms.Widgets.RadioButtonList, 
+    Ella.TestUtils
   Other-Modules:
     Ella.CGI.Header, Ella.CGI.Multipart
 
