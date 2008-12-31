@@ -58,6 +58,21 @@ testRedirectResponse = "Location: /foo/bar/\r\n\
                         \\r\n" ~=?
                         (formatResponse $ redirectResponse "/foo/bar/")
 
+-- cookies
+-- Most of the implementation is from Network.CGI.Cookies,
+-- so we don't bother testing thoroughly
+testAddCookie = "Set-Cookie: foo=bar\r\n\
+                \Status: 200\r\n\
+                \\r\n" ~=?
+                (formatResponse $ buildResponse [ addCookie Cookie { cookieName = "foo"
+                                                                   , cookieValue = "bar"
+                                                                   , cookieExpires = Nothing
+                                                                   , cookieDomain = Nothing
+                                                                   , cookiePath = Nothing
+                                                                   , cookieSecure = False
+                                                                   }
+                                                ] emptyResponse)
+
 tests = test [
           testAddContent1
         , testAddContent2
@@ -68,4 +83,5 @@ tests = test [
         , testSetHeader2
         , testSetHeader3
         , testRedirectResponse
+        , testAddCookie
         ]

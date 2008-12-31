@@ -4,11 +4,13 @@ module Ella.Response (
                     , content
                     , headers
                     , HeaderName(HeaderName)
+                    , Cookie(..)
                     -- * Building Response objects
                     , buildResponse
                     , addContent
                     , setStatus
                     , setHeader
+                    , addCookie
                     -- * Starting points for Response objects
                     , textResponse
                     , utf8TextResponse
@@ -25,13 +27,15 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import Data.List (intersperse)
 import Ella.CGI.Header (Headers, HeaderName(HeaderName))
 import Network.CGI (ContentType(ContentType), showContentType)
+import Network.CGI.Cookie (Cookie(..), showCookie)
 import Ella.GenUtils (apply)
 
 -- | Represents an HTTP response
 data Response = Response {
       content :: ByteString -- ^ The body of the response
     , headers :: Headers    -- ^ The HTTP headers of the response
-    , status :: Int
+    , status :: Int         -- ^ HTTP status code
+    , cookies :: [Cookie]   -- ^ Cookies to be set.  Uses Cookie from Network.CGI.Cookie
     } deriving (Show, Eq)
 
 --
@@ -43,6 +47,7 @@ emptyResponse :: Response
 emptyResponse = Response { content = BS.empty
                          , headers = []
                          , status = 200
+                         , cookies = []
                          }
 
 -- | Add a string to a response
@@ -59,6 +64,9 @@ setHeader h val resp = let headername = HeaderName h
                            removed = filter ((/= headername) . fst) (headers resp)
                            updated = removed ++ [(headername, val)]
                        in resp { headers = updated }
+
+addCookie :: Cookie -> Response -> Response
+addCookie cookie resp = resp { cookies = cookies resp ++ [cookie] }
 
 ---
 --- * Shortcuts for common defaults
@@ -112,7 +120,8 @@ buildResponse = apply
 
 allHeaders resp =
     let statusHeader = (HeaderName "Status", show $ status resp)
-    in headers resp ++ [statusHeader]
+        cookieHeaders = map (\c -> (HeaderName "Set-Cookie", showCookie c)) $ cookies resp
+    in headers resp ++ cookieHeaders ++ [statusHeader]
 
 -- | Convert a Response into the format needed for HTTP.
 --
