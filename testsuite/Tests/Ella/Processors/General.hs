@@ -8,7 +8,7 @@ import Ella.Processors.General
 import Ella.Response
 import Ella.Request
 import Test.HUnit
-import Tests.Ella.Framework (mkGetReq)
+import Tests.Ella.TestUtils (mkGetReq)
 
 testAddSlashRedirectView1 =
     (do

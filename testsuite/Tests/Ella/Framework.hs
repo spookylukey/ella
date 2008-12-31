@@ -1,24 +1,20 @@
-{-# OPTIONS_GHC -fglasgow-exts -XOverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Tests.Ella.Framework
 
 where
 
-import qualified Data.ByteString.Lazy.Char8 as BS
-import Test.HUnit
+import Data.Maybe (isNothing, isJust)
 import Ella.Framework
+import Ella.GenUtils (utf8)
 import Ella.Request
 import Ella.Response
-import Data.Maybe (isNothing, isJust)
-import Ella.GenUtils (utf8)
+import Test.HUnit
+import Tests.Ella.TestUtils (mkGetReq)
+import qualified Data.ByteString.Lazy.Char8 as BS
 
 req1 = mkGetReq "/posts/"
 resp1 = buildResponse [ addContent "resp1" ] utf8HtmlResponse
 resp2 = buildResponse [ addContent "resp2" ] utf8HtmlResponse
-
-mkGetReq path = mkRequest [("REQUEST_METHOD","GET")
-                          ,("PATH_INFO", path)
-                          ,("REQUEST_URI", escapePathWithEnc path utf8Encoding)
-                          ] "" utf8Encoding
 
 alwaysFailView = const (return Nothing)
 alwaysSucceedView1 = const (return $ Just resp1)
