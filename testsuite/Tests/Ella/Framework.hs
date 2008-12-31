@@ -9,7 +9,6 @@ import Ella.Framework
 import Ella.Request
 import Ella.Response
 import Data.Maybe (isNothing, isJust)
-import Control.Monad (liftM, (>=>))
 import Ella.GenUtils (utf8)
 
 req1 = mkGetReq "/posts/"
