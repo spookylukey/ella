@@ -18,7 +18,12 @@ class Param a where
     capture :: String -> Maybe a
 
 instance Param Int where
-    capture = exactParse
+    -- Bug in reads for Int - it seems to ignore overflow and just
+    -- return whatever value.  We can only check by converting back
+    -- to a string and checking.
+    capture s = exactParse s >>= \i -> if show i == s
+                                       then Just i
+                                       else Nothing
 
 instance Param Integer where
     capture = exactParse
