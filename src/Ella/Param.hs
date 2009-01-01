@@ -1,4 +1,6 @@
 {-# OPTIONS_GHC -XTypeSynonymInstances #-}
+-- | Type class and utilities used for making it easy to capture
+-- parameters from URLs and parse GET/POST values as specific types.
 module Ella.Param ( Param(..)
                   , parseOrDefault
                   , captureOrDefault
@@ -10,7 +12,7 @@ import Maybe (fromMaybe)
 import Ella.GenUtils (exactParse)
 
 -- | Type class representing parameters that can be captured (usually
--- | from URL components)
+-- from URL components)
 class Param a where
     -- | Convert a string to a value, returning Nothing if not possible
     capture :: String -> Maybe a

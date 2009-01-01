@@ -1,8 +1,9 @@
-module Ella.Response (
-                      -- * Response object
+module Ella.Response (-- * Response object
                       Response
                     , content
                     , headers
+                    , status
+                    , cookies
                     , HeaderName(HeaderName)
                     , Cookie(..)
                     -- * Building Response objects
@@ -65,6 +66,7 @@ setHeader h val resp = let headername = HeaderName h
                            updated = removed ++ [(headername, val)]
                        in resp { headers = updated }
 
+-- | Add cookie to a response.  Cookie structure is from Network.CGI.Cookie
 addCookie :: Cookie -> Response -> Response
 addCookie cookie resp = resp { cookies = cookies resp ++ [cookie] }
 
