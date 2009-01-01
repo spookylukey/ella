@@ -5,9 +5,9 @@ import qualified Tests.Ella.Processors.General as GeneralProcessors
 import qualified Tests.Ella.Forms.Widgets as Widgets
 import Test.HUnit
 
-main = runTestTT (test [ Request.tests
-                       , Response.tests
-                       , Framework.tests
-                       , GeneralProcessors.tests
-                       , Widgets.tests
+main = runTestTT (test [ "Request tests" ~: Request.tests
+                       , "Response tests" ~: Response.tests
+                       , "Framework tests" ~: Framework.tests
+                       , "Processors tests" ~: GeneralProcessors.tests
+                       , "Widgets tests" ~: Widgets.tests
                        ])
