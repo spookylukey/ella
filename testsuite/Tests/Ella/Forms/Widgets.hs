@@ -21,6 +21,7 @@ fullTextInput =  TI.TextInput { value = "foo"
                               , maxlength = Just 20
                               , name = "aname"
                               , identifier = "anid"
+                              , password = False
                               }
 
 testTextInputRender_1 = "<input type=\"text\" name=\"\" value=\"\" />" ~=? render TI.emptyTextInput
@@ -29,6 +30,7 @@ testTextInputRender_3 = "<input type=\"text\" name=\"aname\" value=\"foo\" id=\"
 testTextInputAddAttributes_1 = "<input type=\"text\" name=\"\" value=\"\" class=\"foo\" />" ~=?
                                (X.showHtmlFragment $ (X.toHtml TI.emptyTextInput) ! [X.theclass "foo"])
 testTextInputRender_4 = "<input type=\"text\" name=\"foo\" value=\"\" id=\"id_foo\" />" ~=? (render $ setId "id_foo" $ TI.emptyTextInput { TI.name = "foo" })
+testPasswordRender_1 = "<input type=\"password\" name=\"foo\" value=\"foo\" />" ~=? (render $ TI.emptyTextInput { TI.value = "foo", TI.name = "foo", TI.password = True })
 
 testLabelRender = "<label for=\"anid\">A Label</label>" ~=? (render $ makeLabel "A Label" fullTextInput)
 testTextareaRender_1 = "<textarea name=\"\"></textarea>" ~=? render TA.emptyTextarea
@@ -76,6 +78,7 @@ tests = test [ testTextInputRender_1
              , testTextInputRender_3
              , testTextInputAddAttributes_1
              , testTextInputRender_4
+             , testPasswordRender_1
              , testLabelRender
              , testTextareaRender_1
              , testTextareaRender_2

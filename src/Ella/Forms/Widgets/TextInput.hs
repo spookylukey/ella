@@ -17,6 +17,7 @@ data TextInput = TextInput {
     , identifier :: String
     , maxlength :: Maybe Int
     , size :: Maybe Int
+    , password :: Bool
     }
 
 
@@ -25,10 +26,11 @@ emptyTextInput = TextInput { value = ""
                            , size = Nothing
                            , name = ""
                            , identifier = ""
+                           , password = False
                            }
 
 instance X.HTML TextInput where
-    toHtml t = let attrs =  [ X.thetype "text"
+    toHtml t = let attrs =  [ X.thetype (if password t then "password" else "text")
                             , X.name $ name t
                             , X.value $ value t
                             ] ++
