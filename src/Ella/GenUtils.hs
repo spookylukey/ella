@@ -24,6 +24,11 @@ with :: a -> [a -> a] -> a
 with = foldl (flip ($))
 
 -- | Parse a value, or fail if the entire string cannot be parsed
+--
+-- Note that this relies on 'reads', which appears to be buggy for Int
+-- -- it works something like parsing as 'Integer', then wrapping to a 32 bit
+-- Int.  The 'Param' instance for 'Int' has fixed this, so you can
+-- use 'capture' instead.
 exactParse :: (Read a, Monad m) => String -> m a
 exactParse s =
   case reads s of
