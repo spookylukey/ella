@@ -10,7 +10,7 @@ Build-Type:     Simple
 
 Library
   Build-Depends:
-        base == 3.*,
+        base == 4.*,
         bytestring >= 0.9.1,
         haskell98 >= 1.0.1,
         containers >= 0.1.0,

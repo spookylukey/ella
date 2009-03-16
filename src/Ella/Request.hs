@@ -155,7 +155,7 @@ repack str encoding = let bytes = BS.pack str
 --
 -- This can fail if the environment does not pass "REQUEST_URI".  Apache
 -- always does pass this, so normally just use 'fromJust' on the answer.
-requestUriRaw :: (Monad m) => Request -> m String
+requestUriRaw :: Request -> Maybe String
 requestUriRaw request = Map.lookup "REQUEST_URI" $ environment request
 
 
@@ -180,7 +180,7 @@ escapePathWithEnc :: String -> Encoding -> String
 escapePathWithEnc s enc = escapePath (encoder enc $ s)
 
 -- | Retrieve a single POST value
-getPOST :: (Monad m) => Request -> String -> m String
+getPOST :: Request -> String -> Maybe String
 getPOST req name = Map.lookup name $ _postInputMap req
 
 -- | Retrieve all the POST values with the given name
@@ -191,7 +191,7 @@ getPOSTlist :: Request -> String -> [String]
 getPOSTlist req name = getMatching name (allPOST req)
 
 -- | Retrieve a single query string value (last one wins if there are multiple)
-getGET :: (Monad m) => Request -> String -> m String
+getGET :: Request -> String -> Maybe String
 getGET req name = Map.lookup name $ _getInputMap req
 
 -- | Retrieve all the query string values with the given name
