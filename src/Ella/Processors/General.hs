@@ -3,13 +3,17 @@ module Ella.Processors.General
      -- * Processors
      -- $processors
      addSlashRedirectView
+    , signedCookiesProcessor
     )
 
 where
 
+import Data.Digest.Pure.SHA (showDigest, sha1)
 import Data.List (isSuffixOf)
+import Ella.GenUtils (utf8)
 import Ella.Request
 import Ella.Response
+import Ella.Framework
 
 -- $processors
 --
@@ -55,3 +59,16 @@ addSlashRedirectView req =
                       in if ("/" `isSuffixOf` path)
                          then Nothing -- slash is already there
                          else Just $ redirectResponse (path ++ "/" ++ qs)
+
+-- | Create processor signing cookies.  First parameter is a secret string
+-- that is used for hashing.
+signedCookiesProcessor :: String -> View -> Request -> IO (Maybe Response)
+signedCookiesProcessor secret view req =
+    do
+      -- TODO - modify the request to strip invalid cookies
+      resp' <- view req
+      case resp' of
+        Nothing -> return Nothing
+        -- Now modify outgoing response
+        Just resp -> return $ Just $ resp { cookies = map addShaHash $ cookies resp }
+    where addShaHash cookie = cookie { cookieValue = (showDigest $ sha1 $ utf8 $ secret ++ cookieValue cookie) ++ ":" ++ cookieValue cookie }
