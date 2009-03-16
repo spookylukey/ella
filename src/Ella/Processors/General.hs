@@ -60,8 +60,9 @@ addSlashRedirectView req =
                          then Nothing -- slash is already there
                          else Just $ redirectResponse (path ++ "/" ++ qs)
 
--- | Create processor signing cookies.  First parameter is a secret string
--- that is used for hashing.
+-- | Create view processor for implementing signed cookies.
+-- Pass a secret string (used for hashing), and apply the resulting function
+-- as a view processor.
 signedCookiesProcessor :: String -> View -> Request -> IO (Maybe Response)
 signedCookiesProcessor secret view req =
     do
