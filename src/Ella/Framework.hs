@@ -65,6 +65,8 @@ data DispatchOptions = DispatchOptions {
     -- ^ function that will return a 404 page in the case of no view functions matching
     , requestOptions :: RequestOptions
     -- ^ options passed to 'buildCGIRequest'
+    , viewProcessors :: [View -> View]
+    -- ^ view processors that should be applied to list of views.
 }
 
 type View = Request -> IO (Maybe Response)
@@ -96,6 +98,7 @@ defaultDispatchOptions :: DispatchOptions
 defaultDispatchOptions = DispatchOptions {
                            notFoundHandler = const $ return $ default404
                          , requestOptions = defaultRequestOptions
+                         , viewProcessors = []
                          }
 
 -- | Used by dispatchCGI, might be useful on its own, especially in testing
@@ -124,7 +127,7 @@ dispatchCGI :: [View]           -- ^ list of views functions that will be tried 
             -> IO ()
 dispatchCGI views opts = do
   req <- buildCGIRequest (requestOptions opts)
-  resp' <- dispatchRequest views req
+  resp' <- (apply (viewProcessors opts) $ dispatchRequest views) req
   resp <- case resp' of
             Nothing -> notFoundHandler opts $ req
             Just x -> return x
