@@ -13,6 +13,8 @@ module Ella.Request (
                    , getPOSTlist
                    , getGET
                    , getGETlist
+                   , getCookieVal
+                   , allCookies
                    , files
                     -- ** Constructors for Request
                    , mkRequest
@@ -37,6 +39,7 @@ import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import Data.List (partition)
 import qualified Data.Map as Map
 import Data.Maybe
+import Network.CGI.Cookie (readCookies)
 import Network.CGI.Protocol (takeInput, formDecode)
 import Ella.CGI.Multipart
 import Network.URI (escapeURIString, isUnescapedInURI)
@@ -93,6 +96,7 @@ data Request = Request {
     , allGET :: [(String, String)]
     , _getInputMap :: Map.Map String String
     , files :: Map.Map String FileInput -- ^ a map of all uploaded files
+    , allCookies :: [(String, String)]
     } deriving (Show, Eq)
 
 -- | Create a Request object
@@ -112,6 +116,7 @@ mkRequest env body enc
              , allGET = gvs
              , _getInputMap = Map.fromList gvs
              , files = Map.fromList fvs
+             , allCookies = readCookies $ lookupOrNil "HTTP_COOKIE" env
              }
       where
         (pvs, fvs) = bodyInput env body enc      -- post vals, file vals
@@ -200,6 +205,9 @@ getGET req name = Map.lookup name $ _getInputMap req
 getGETlist :: Request -> String -> [String]
 getGETlist req name = getMatching name (allGET req)
 
+
+-- | Retrieve the value of a cookie
+getCookieVal req name = lookup name $ allCookies req
 
 -- Much of the following is taken mainly from CGI.Protocol, with
 -- large modifications to add support for encoding and to

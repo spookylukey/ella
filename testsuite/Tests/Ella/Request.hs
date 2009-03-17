@@ -88,6 +88,12 @@ test_files_1 = Just FileInput { fileFilename = "thefilename\233.txt"
                               , fileContentType = ContentType "text" "plain" []
                               } ~=? (Map.lookup "afile" $ files postRequest2)
 
+-- cookies
+cookieRequest = mkRequest [("HTTP_COOKIE", "name1=val1; name2=val2")] "" utf8Encoding
+test_getCookieVal1 = Just "val1" ~=? getCookieVal cookieRequest "name1"
+test_getCookieVal2 = Nothing ~=? getCookieVal cookieRequest "name3"
+
+
 tests = test [
           testMethod
         , testPath
@@ -113,4 +119,6 @@ tests = test [
         , test_getGET_6
         , test_getGETlist_1
         , test_files_1
+        , test_getCookieVal1
+        , test_getCookieVal2
         ]
