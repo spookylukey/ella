@@ -12,6 +12,9 @@ module Ella.Response (-- * Response object
                     , setStatus
                     , setHeader
                     , addCookie
+                    , deleteCookie
+                    , standardCookie
+                    , expireCookie
                     -- * Starting points for Response objects
                     , textResponse
                     , utf8TextResponse
@@ -30,6 +33,7 @@ import Ella.CGI.Header (Headers, HeaderName(HeaderName))
 import Network.CGI (ContentType(ContentType), showContentType)
 import Network.CGI.Cookie (Cookie(..), showCookie)
 import Ella.GenUtils (apply)
+import System.Time (ClockTime(..), toUTCTime)
 
 -- | Represents an HTTP response
 data Response = Response {
@@ -69,6 +73,22 @@ setHeader h val resp = let headername = HeaderName h
 -- | Add cookie to a response.  Cookie structure is from Network.CGI.Cookie
 addCookie :: Cookie -> Response -> Response
 addCookie cookie resp = resp { cookies = cookies resp ++ [cookie] }
+
+
+standardCookie = Cookie { cookieName = ""
+                        , cookieValue = ""
+                        , cookieExpires = Nothing
+                        , cookieDomain = Nothing
+                        , cookiePath = Just "/"
+                        , cookieSecure = False
+                        }
+
+expireCookie cookie = cookie { cookieExpires = Just $ toUTCTime $ TOD 1 0 }
+oldCookie name = expireCookie $ standardCookie { cookieName = name }
+
+-- | Delete the named cookie in the client
+deleteCookie :: String -> Response -> Response
+deleteCookie name resp = resp { cookies = cookies resp ++ [oldCookie name] }
 
 ---
 --- * Shortcuts for common defaults
