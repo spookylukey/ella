@@ -65,7 +65,7 @@ addSlashRedirectView req =
 -- | Create view processor for implementing signed cookies.
 -- Pass a secret string (used for hashing), and apply the resulting function
 -- as a view processor.
-signedCookiesProcessor :: String -> View -> Request -> IO (Maybe Response)
+signedCookiesProcessor :: String -> (View -> View)
 signedCookiesProcessor secret view req =
     do
       -- modify the request to strip invalid cookies
