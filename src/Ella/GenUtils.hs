@@ -4,10 +4,12 @@ module Ella.GenUtils
 
 where
 
+import Control.Monad (liftM)
 import Data.ByteString.Lazy.Char8 (ByteString)
-import qualified Data.ByteString.Lazy.UTF8 as UTF8
-
 import GHC.Exts( IsString(..) )
+import Random (randomRs, newStdGen)
+import System.Posix.Time (epochTime)
+import qualified Data.ByteString.Lazy.UTF8 as UTF8
 
 -- | Takes a String and returns UTF8 ByteString
 utf8 :: String -> ByteString
@@ -39,3 +41,15 @@ exactParse s =
 nullToNothing :: String -> Maybe String
 nullToNothing "" = Nothing
 nullToNothing x  = Just x
+
+
+-- | Return current time as a UNIX timestamp
+getTimestamp :: IO Int
+getTimestamp = liftM (floor . toRational) epochTime
+
+-- | Returns a randomly generated string of length n
+randomStr :: Int -> IO String
+randomStr n = do
+    g <- newStdGen
+    return $ take n (randomRs chars g)
+  where chars = ('a','z')

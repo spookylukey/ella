@@ -3,9 +3,9 @@ module Ella.Utils ( addHtml
 
 where
 
-import Text.XHtml (renderHtml, HTML)
-import Ella.Response (addContent, Response)
 import Ella.GenUtils (utf8)
+import Ella.Response (addContent, Response)
+import Text.XHtml (renderHtml, HTML)
 
 -- Utility functions
 
