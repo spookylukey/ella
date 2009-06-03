@@ -29,7 +29,7 @@ viewDisplayingCookies req = return $ Just $ buildResponse [
 
 -- This mirrors how signedCookiesProcessors does it.  Duplication
 -- is allowed to ensure test actually does the right thing!
-signCookieVal val = (showDigest $ sha1 $ utf8 (scp_secret ++ val)) ++ ":" ++ val
+signCookieVal val = (showDigest $ sha1 $ utf8 ("signedcookies" ++ scp_secret ++ val)) ++ ":" ++ val
 
 testSignedCookiesProcessor1 =
     (do
