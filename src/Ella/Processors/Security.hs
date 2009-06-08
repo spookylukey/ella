@@ -75,9 +75,11 @@ mkCSRFProtection :: Cookie -- ^ cookie used for basis of CSRF cookie, must have 
                  -> CSRFProtection
 mkCSRFProtection baseCookie rejectView secret =
     let tokenName = "csrftoken"
+        requestEnvName = "csrftoken"
         makeCsrfToken = randomStr 20
-        getTokenFromReq req = fromJust $ Map.lookup "csrftoken" $ environment req
-        addTokenToReq req token = req { environment = Map.insert "csrftoken" token $ environment req }
+        getTokenFromReq req = fromJust $ Map.lookup requestEnvName $ environment req
+        mkTokenField req = "<input type=\"hidden\" name=\"" ++ tokenName ++ "\" value=\"" ++ getTokenFromReq req ++ "\" >"
+        addTokenToReq req token = req { environment = Map.insert requestEnvName token $ environment req }
 
         makeCsrfCookie token = do
           timestamp <- getTimestamp
@@ -119,7 +121,7 @@ mkCSRFProtection baseCookie rejectView secret =
             else normalProc
 
     in CSRFProtection { csrfProtectView = pview
-                      , csrfTokenField = undefined
+                      , csrfTokenField = mkTokenField
                       , csrfTokenName = tokenName
                       , csrfTokenValue = getTokenFromReq
                       }

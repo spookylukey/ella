@@ -156,6 +156,16 @@ testCsrfSetsTokenInRequestEnv =
       return ((BS.length $ content resp) > 1)
     ) ~? "csrf processor puts token into request environment"
 
+testCsrfTokenField =
+    (do
+      let req = mkGetReq "/foo/" `with` [ addCsrfCookie ]
+          -- view that extracts 'csrftoken' from request environment field
+          view = \req -> return $ Just $ buildResponse [ addContent $ utf8 $ csrfTokenField csrfProtection $ req ] utf8TextResponse
+      Just resp <- (csrfProtectView csrfProtection) view req
+      return (content resp == utf8 ("<input type=\"hidden\" name=\"csrftoken\" value=\"" ++ aCsrfToken ++ "\" >"))
+    ) ~? "csrf hidden input field is correct"
+
+
 tests = test [ testSignedCookiesProcessor1
              , testSignedCookiesProcessor2
              , testSignedCookiesProcessor3
@@ -168,4 +178,5 @@ tests = test [ testSignedCookiesProcessor1
              , testCsrfSetsOutgoingCookie
              , testCsrfSetsSameOutgoingCookie
              , testCsrfSetsTokenInRequestEnv
+             , testCsrfTokenField
              ]
