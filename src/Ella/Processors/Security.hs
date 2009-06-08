@@ -1,4 +1,6 @@
 module Ella.Processors.Security ( signedCookiesProcessor
+                                , CSRFProtection(..)
+                                , mkCSRFProtection
                                 )
 
 where
@@ -72,9 +74,8 @@ mkCSRFProtection :: Cookie -- ^ cookie used for basis of CSRF cookie, must have 
                  -> String -- ^ secret string used for hashing
                  -> CSRFProtection
 mkCSRFProtection baseCookie rejectView secret =
-    let tokenName = "csrfmiddlewaretoken"
+    let tokenName = "csrftoken"
         makeCsrfToken = randomStr 20
-        hashToken val = makeShaHash "csrf" secret val
         getTokenFromReq req = fromJust $ Map.lookup "csrftoken" $ environment req
         addTokenToReq req token = req { environment = Map.insert "csrftoken" token $ environment req }
 
@@ -99,7 +100,7 @@ mkCSRFProtection baseCookie rejectView secret =
                                  Just val -> return val
                                  _        -> makeCsrfToken
                            -- add token to environment in Request object
-                           let req2 = addTokenToReq req (hashToken token)
+                           let req2 = addTokenToReq req token
                            resp' <- view req2
                            case resp' of
                              Nothing -> return Nothing
@@ -112,7 +113,7 @@ mkCSRFProtection baseCookie rejectView secret =
           -- if POST request, reject if no cookie or no POST token or
           -- POST token doesn't match hash of cookie
           if requestMethod req == "POST"
-            then if isNothing incomingCookie || (fmap hashToken incomingCookie /= incomingToken)
+            then if isNothing incomingCookie || (incomingCookie /= incomingToken)
                    then rejectView req
                    else normalProc
             else normalProc

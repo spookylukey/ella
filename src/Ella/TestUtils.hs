@@ -22,3 +22,6 @@ mkPostReq path postData =
                  , ("CONTENT_TYPE", "application/x-www-form-urlencoded")
                  , ("CONTENT_LENGTH", show $ BS.length encodedPostData)
                  ] encodedPostData utf8Encoding
+
+-- | Add cookie name/value pairs to a request
+addCookieValues cookies req = req { allCookies = (allCookies req) ++ cookies }
