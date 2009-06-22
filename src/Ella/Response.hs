@@ -118,13 +118,13 @@ htmlResponse charset = emptyResponse {
                        }
 
 -- | An empty UTF8 text/plain response.  The user is responsible
--- for ensuing that that content added to this response is actually
+-- for ensuring that that content added to this response is actually
 -- UTF8 ByteStrings.
 utf8TextResponse :: Response
 utf8TextResponse = textResponse "UTF-8"
 
 -- | An empty UTF8 text/html response.  The user is responsible
--- for ensuing that that content added to this response is actually
+-- for ensuring that that content added to this response is actually
 -- UTF8 ByteStrings.
 utf8HtmlResponse :: Response
 utf8HtmlResponse = htmlResponse "UTF-8"
