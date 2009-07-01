@@ -10,7 +10,7 @@ import Ella.Request
 import Ella.Response
 import Ella.TestUtils (mkGetReq, mkPostReq, addCookieValues)
 import Test.HUnit
-import qualified Data.ByteString.Lazy.Char8 as BS
+import qualified Data.ByteString.Lazy as BS
 import qualified Data.Map as Map
 
 scp_secret = "test"

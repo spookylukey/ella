@@ -5,7 +5,7 @@ import Ella.Framework
 import Ella.GenUtils (utf8)
 import Ella.Request
 import Network.CGI (formEncode)
-import qualified Data.ByteString.Lazy.Char8 as BS
+import qualified Data.ByteString.Lazy as BS
 
 
 mkGetReq path = mkRequest [("REQUEST_METHOD", "GET")

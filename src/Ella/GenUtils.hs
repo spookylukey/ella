@@ -5,7 +5,7 @@ module Ella.GenUtils
 where
 
 import Control.Monad (liftM)
-import Data.ByteString.Lazy.Char8 (ByteString)
+import Data.ByteString.Lazy (ByteString)
 import GHC.Exts( IsString(..) )
 import Random (randomRs, newStdGen)
 import System.Posix.Time (epochTime)

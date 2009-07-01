@@ -39,7 +39,7 @@ import Ella.Param
 import Ella.Response
 import Ella.Request
 import System.IO (stdout, hClose)
-import qualified Data.ByteString.Lazy.Char8 as BS
+import qualified Data.ByteString.Lazy as BS
 
 -- * Dispatching
 

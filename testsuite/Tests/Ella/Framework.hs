@@ -10,7 +10,7 @@ import Ella.Request
 import Ella.Response
 import Test.HUnit
 import Ella.TestUtils (mkGetReq)
-import qualified Data.ByteString.Lazy.Char8 as BS
+import qualified Data.ByteString.Lazy as BS
 
 req1 = mkGetReq "/posts/"
 resp1 = buildResponse [ addContent "resp1" ] utf8HtmlResponse

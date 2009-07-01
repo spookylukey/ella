@@ -33,8 +33,9 @@ module Ella.Request (
 
 where
 
-import Data.ByteString.Lazy.Char8 (ByteString)
-import qualified Data.ByteString.Lazy.Char8 as BS
+import Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy.Char8 (pack, unpack)
+import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import Data.List (partition)
 import qualified Data.Map as Map
@@ -150,10 +151,10 @@ pathInfo request = let pi = Map.lookup "PATH_INFO" $ environment request
 --
 -- PATH_INFO and other vars contains Haskell Strings, but in reality these are
 -- simply the bytes obtained from the environment packed into Unicode chars one
--- byte at a time.  We re-pack them into a ByteString (BS.pack discards anything
+-- byte at a time.  We re-pack them into a ByteString (pack discards anything
 -- > \255, which includes nothing in this case), and then re-interpret.
 repack :: String -> Encoding -> String
-repack str encoding = let bytes = BS.pack str
+repack str encoding = let bytes = pack str
                       in (decoder encoding) bytes
 
 -- | Returns the URI requested by the client, with percent encoding intact
@@ -176,7 +177,7 @@ buildCGIRequest opts = do
 -- | Escapes a string of bytes with percent encoding
 escapePath :: ByteString -> String
 -- Borrowed from Network.URI
-escapePath bs = escapeURIString isUnescapedInURIPath $ BS.unpack bs
+escapePath bs = escapeURIString isUnescapedInURIPath $ unpack bs
   where isUnescapedInURIPath c = isUnescapedInURI c && c `notElem` "?#"
 
 -- | Escapes a unicode string with percent encoding, using the supplied
@@ -256,13 +257,13 @@ decodeBody :: Maybe ContentType
 decodeBody ctype inp enc =
     case ctype of
                Just (ContentType "application" "x-www-form-urlencoded" _)
-                   -> (formInputEnc (BS.unpack inp) enc, [])
+                   -> (formInputEnc (unpack inp) enc, [])
                Just (ContentType "multipart" "form-data" ps)
                    -> multipartDecode ps inp enc
                Just _ -> ([], []) -- unknown content-type, the user will have to
                                   -- deal with it by looking at the raw content
                -- No content-type given, assume x-www-form-urlencoded
-               Nothing -> (formInputEnc (BS.unpack inp) enc, [])
+               Nothing -> (formInputEnc (unpack inp) enc, [])
 
 
 -- | Decodes multipart\/form-data input.

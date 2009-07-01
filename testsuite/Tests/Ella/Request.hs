@@ -4,8 +4,8 @@ module Tests.Ella.Request
 where
 
 import qualified Data.Map as Map
-import qualified Data.ByteString.Lazy.Char8 as BS
-import Data.ByteString.Lazy.Char8 (ByteString)
+import qualified Data.ByteString.Lazy as BS
+import Data.ByteString.Lazy (ByteString)
 import Ella.Request
 import Test.HUnit
 import Ella.GenUtils (utf8)

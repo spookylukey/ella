@@ -26,8 +26,9 @@ module Ella.Response (-- * Response object
                     , formatResponse
                     ) where
 
-import Data.ByteString.Lazy.Char8 (ByteString)
-import qualified Data.ByteString.Lazy.Char8 as BS
+import Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy.Char8 (pack)
+import qualified Data.ByteString.Lazy as BS
 import Data.List (intersperse)
 import Ella.CGI.Header (Headers, HeaderName(HeaderName))
 import Network.CGI (ContentType(ContentType), showContentType)
@@ -152,9 +153,9 @@ formatResponse :: Response -> ByteString
 formatResponse resp =
     -- NOTE: we use CRLF since lighttpd mod_fastcgi can't handle
     -- just LF if there are CRs in the content.
-    unlinesCrLf ([BS.pack (n++": "++v) | (HeaderName n,v) <- allHeaders resp]
+    unlinesCrLf ([pack (n++": "++v) | (HeaderName n,v) <- allHeaders resp]
                 ++ [BS.empty, content resp])
-  where unlinesCrLf = BS.concat . intersperse (BS.pack "\r\n")
+  where unlinesCrLf = BS.concat . intersperse (pack "\r\n")
 
 
 -- | Create an HTTP 302 redirect

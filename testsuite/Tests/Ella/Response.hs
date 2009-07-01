@@ -5,8 +5,8 @@ where
 
 import Ella.Response
 import Test.HUnit
-import Data.ByteString.Lazy.Char8 (ByteString)
-import qualified Data.ByteString.Lazy.Char8 as BS
+import Data.ByteString.Lazy (ByteString)
+import qualified Data.ByteString.Lazy as BS
 import Data.List (sort)
 
 testAddContent1 = "“Hello”" ~=? (content $ addContent "“Hello”" $ emptyResponse)
