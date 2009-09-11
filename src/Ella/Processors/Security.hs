@@ -7,6 +7,7 @@ module Ella.Processors.Security ( signedCookiesProcessor
 where
 
 import Control.Monad (guard)
+import Data.ByteString.Search.KnuthMorrisPratt (matchLL)
 import Data.Digest.Pure.SHA (showDigest, sha1)
 import Data.Maybe (isJust, fromJust, isNothing)
 import Ella.Framework
@@ -112,9 +113,17 @@ mkCSRFProtection baseCookie rejectView secret =
                              Nothing -> return Nothing
                              Just resp -> do
                                         -- set cookie on all outgoing responses
-                                        cookie <- makeCsrfCookie token
-                                        let resp2 =  resp `with` [ addCookie cookie ]
-                                        return (Just resp2)
+                                        -- that have used the token.  (Don't
+                                        -- want to set cookie with every
+                                        -- response...). This is a fairly brute
+                                        -- force and probably inefficient
+                                        -- solution
+                                        if null $ matchLL (utf8 token) (content resp)
+                                           then return (Just resp)
+                                           else do
+                                               cookie <- makeCsrfCookie token
+                                               let resp2 =  resp `with` [ addCookie cookie ]
+                                               return (Just resp2)
 
           -- if POST request, reject if no cookie or no POST token or
           -- POST token doesn't match hash of cookie

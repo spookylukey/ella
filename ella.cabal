@@ -12,6 +12,7 @@ Library
   Build-Depends:
         base == 4.*,
         bytestring >= 0.9.1,
+        stringsearch >= 0.2.1.1,
         haskell98 >= 1.0.1,
         containers >= 0.1.0,
         utf8-string >= 0.3.1,
