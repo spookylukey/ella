@@ -162,7 +162,7 @@ testCsrfTokenField =
           -- view that extracts 'csrftoken' from request environment field
           view = \req -> return $ Just $ buildResponse [ addContent $ utf8 $ csrfTokenField csrfProtection $ req ] utf8TextResponse
       Just resp <- (csrfProtectView csrfProtection) view req
-      return (content resp == utf8 ("<input type=\"hidden\" name=\"csrftoken\" value=\"" ++ aCsrfToken ++ "\" >"))
+      return (content resp == utf8 ("<div style=\"display:none\"><input type=\"hidden\" name=\"csrftoken\" value=\"" ++ aCsrfToken ++ "\" ></div>"))
     ) ~? "csrf hidden input field is correct"
 
 

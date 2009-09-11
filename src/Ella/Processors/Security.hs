@@ -78,7 +78,7 @@ mkCSRFProtection baseCookie rejectView secret =
         requestEnvName = "csrftoken"
         makeCsrfToken = randomStr 20
         getTokenFromReq req = fromJust $ Map.lookup requestEnvName $ environment req
-        mkTokenField req = "<input type=\"hidden\" name=\"" ++ tokenName ++ "\" value=\"" ++ getTokenFromReq req ++ "\" >"
+        mkTokenField req = "<div style=\"display:none\"><input type=\"hidden\" name=\"" ++ tokenName ++ "\" value=\"" ++ getTokenFromReq req ++ "\" ></div>"
         addTokenToReq req token = req { environment = Map.insert requestEnvName token $ environment req }
 
         makeCsrfCookie token = do
