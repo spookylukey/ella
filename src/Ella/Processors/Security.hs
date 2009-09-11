@@ -1,6 +1,7 @@
 module Ella.Processors.Security ( signedCookiesProcessor
                                 , CSRFProtection(..)
                                 , mkCSRFProtection
+                                , defaultCSRFRejectView
                                 )
 
 where
@@ -66,7 +67,10 @@ data CSRFProtection = CSRFProtection {
 }
 
 defaultCSRFRejectView :: View
-defaultCSRFRejectView = undefined -- TODO
+defaultCSRFRejectView req = return $ Just $ buildResponse [ addContent $ utf8 "<h1>403 Forbidden</h1>"
+                                                          , addContent $ utf8 "<p>CSRF protection triggered, request aborted"
+                                                          , setStatus 403
+                                                          ] utf8HtmlResponse
 
 -- | Creates a CSRFProtection object for the supplied options.
 mkCSRFProtection :: Cookie -- ^ cookie used for basis of CSRF cookie, must have at least 'name' set, 'value' and 'expires' will be overwritten
