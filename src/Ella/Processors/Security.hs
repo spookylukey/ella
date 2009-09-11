@@ -55,7 +55,7 @@ signedCookiesProcessor secret view req =
 -- unique to each user, and requires incoming POST requests to have the same
 -- token.
 data CSRFProtection = CSRFProtection {
-      csrfProtectView :: View -> View -- ^ view processor that stops requests
+      csrfViewProcessor :: View -> View -- ^ view processor that stops requests
                                   -- without the CSRF token and sets an outgoing
                                   -- cookie.
     , csrfTokenField :: Request -> String -- ^ function that returns a hidden
@@ -124,7 +124,7 @@ mkCSRFProtection baseCookie rejectView secret =
                    else normalProc
             else normalProc
 
-    in CSRFProtection { csrfProtectView = pview
+    in CSRFProtection { csrfViewProcessor = pview
                       , csrfTokenField = mkTokenField
                       , csrfTokenName = tokenName
                       , csrfTokenValue = getTokenFromReq

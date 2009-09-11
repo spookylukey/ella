@@ -83,7 +83,7 @@ csrfProtection = mkCSRFProtection (Cookie { cookieName = "csrf"
                                           , cookieSecure = False })
                  csrfRejectionView "secret"
 
-protectedView = (csrfProtectView csrfProtection) csrfTestView
+protectedView = (csrfViewProcessor csrfProtection) csrfTestView
 
 aCsrfToken = "01234567890123456789"
 -- Utility function for adding a valid CSRF cookie to a Request
@@ -152,7 +152,7 @@ testCsrfSetsTokenInRequestEnv =
       let req = mkGetReq "/foo/"
           -- view that extracts 'csrftoken' from request environment field
           view = \req -> return $ Just $ buildResponse [ addContent $ utf8 $ Map.findWithDefault "" "csrftoken" $ environment req ] utf8TextResponse
-      Just resp <- (csrfProtectView csrfProtection) view req
+      Just resp <- (csrfViewProcessor csrfProtection) view req
       return ((BS.length $ content resp) > 1)
     ) ~? "csrf processor puts token into request environment"
 
@@ -161,7 +161,7 @@ testCsrfTokenField =
       let req = mkGetReq "/foo/" `with` [ addCsrfCookie ]
           -- view that extracts 'csrftoken' from request environment field
           view = \req -> return $ Just $ buildResponse [ addContent $ utf8 $ csrfTokenField csrfProtection $ req ] utf8TextResponse
-      Just resp <- (csrfProtectView csrfProtection) view req
+      Just resp <- (csrfViewProcessor csrfProtection) view req
       return (content resp == utf8 ("<div style=\"display:none\"><input type=\"hidden\" name=\"csrftoken\" value=\"" ++ aCsrfToken ++ "\" ></div>"))
     ) ~? "csrf hidden input field is correct"
 
