@@ -32,9 +32,14 @@ particular order:
 
      editPost :: Int -> Request -> IO Response
 
-   The type signature on editPost means that "posts/123/edit" will be parsed and
+   The type signature on editPost means that "posts/123/edit/" will be parsed and
    will pass the integer 123 and the request object to editPost, but
-   "posts/abc/edit/" will not match.
+   "posts/abc/edit/" will not match.  ``anyParam`` is based on a type class
+   ``Param``, so you can extend it to match your own types.
+
+   The major downside to this approach is that 'DRY' URL reversing is
+   impossible. You have to create permalink functions that will necessarily
+   duplicate information found in the 'routes' definition.
 
  * 'View processors' - inspired by Django middleware, these allow pre and post
    processing for request handling, which can be installed globally, or on a
@@ -65,11 +70,13 @@ Some failings:
  * Assumes use of the IO monad in lots of places - it would be probably be
    better to generalise to MonadIO or something.
 
+ * 'DRY' URL reversing impossible
+
  * CGI only at the moment.  It might be possible to adapt for FastCGI etc, I
    don't know.
 
  * No decent form handling or generating code.  I've experimented with defining
-   widgets, and I've used them in real code, but the advantages of raw HTML are
-   not compelling.  I have looked at other form handling libraries and haven't
-   found anything that satisfies my needs.  'Formlets' is neat, but far too
-   inflexible and simplistic, especially with the generated HTML.
+   widgets, and I've used them in real code, but the advantages over raw HTML
+   are not compelling.  I have looked at other form handling libraries and
+   haven't found anything that satisfies my needs.  'Formlets' is neat, but far
+   too inflexible and simplistic, especially with the generated HTML.
