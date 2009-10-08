@@ -8,6 +8,7 @@ import qualified Text.XHtml as X
 import Text.XHtml ((!))
 import Ella.Forms.Base
 import Ella.Forms.Widgets
+import qualified Ella.Forms.Widgets.OptionList as OL
 import qualified Ella.Forms.Widgets.RadioButton as RB
 import qualified Ella.Forms.Widgets.RadioButtonList as RBL
 import qualified Ella.Forms.Widgets.TextInput as TI
@@ -72,6 +73,21 @@ testRadioButtonListRender = ("<label>" ++
                                                           , captions = map X.toHtml ["Label 1", "Label 2"]
                                                           })
 
+testOptionListRender = ("<select name=\"foo\" size=\"8\" id=\"id_foo\" multiple=\"multiple\">" ++
+                        "<option value=\"val1\">Value 1</option>" ++
+                        "<option value=\"val2\" selected=\"selected\">Value 2</option>" ++
+                        "<option value=\"val3\">Value 3</option>" ++
+                        "<option value=\"val4\" selected=\"selected\">Value 4</option>" ++
+                        "</select>") ~=?
+                       (render $ OL.OptionList { selectedValues = ["val2", "val4"]
+                                               , name = "foo"
+                                               , identifier = "id_foo"
+                                               , values = ["val1", "val2", "val3", "val4"]
+                                               , captions = ["Value 1", "Value 2", "Value 3", "Value 4"]
+                                               , multiple = True
+                                               , size = 8
+                                               })
+
 
 tests = test [ testTextInputRender_1
              , testTextInputRender_2
@@ -87,4 +103,5 @@ tests = test [ testTextInputRender_1
              , testRadioButtonRender
              , testRadioButtonRender2
              , testRadioButtonListRender
+             , testOptionListRender
              ]

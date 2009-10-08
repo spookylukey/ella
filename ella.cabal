@@ -29,6 +29,7 @@ Library
     Ella.Param, Ella.Forms.Widgets,
     Ella.Forms.Base, Ella.Forms.Widgets.TextInput, Ella.Forms.Widgets.Textarea,
     Ella.Forms.Widgets.RadioButton, Ella.Forms.Widgets.RadioButtonList, 
+    Ella.Forms.Widgets.OptionList,
     Ella.TestUtils
   Other-Modules:
     Ella.CGI.Header, Ella.CGI.Multipart
