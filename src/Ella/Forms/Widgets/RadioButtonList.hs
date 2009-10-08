@@ -2,7 +2,6 @@
 module Ella.Forms.Widgets.RadioButtonList where
 
 import Control.Monad (liftM)
-import Data.Maybe (catMaybes)
 import Ella.Forms.Base
 import Ella.GenUtils (nullToNothing)
 import qualified Text.XHtml as X
