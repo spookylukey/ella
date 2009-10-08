@@ -13,7 +13,7 @@ import Text.XHtml ( (<<)
 
 
 data RadioButtonList = RadioButtonList {
-      value :: String
+      selectedValue :: String
     , name :: String
     , identifier :: String
     , values :: [String]
@@ -29,7 +29,7 @@ instance X.HTML RadioButtonList where
                                                       , identifier = if (not . null . identifier) rbl
                                                                      then identifier rbl ++ "_" ++ show idx
                                                                      else ""
-                                                      , checked = val == value rbl
+                                                      , checked = val == selectedValue rbl
                                                       }
                                        +++ " " +++ caption)
                            +++ X.br)
@@ -39,6 +39,6 @@ instance HasId RadioButtonList where
     getId t = identifier t
 
 instance HasVal RadioButtonList String where
-    setVal val t = t { value = val }
-    getVal t = value t
+    setVal val t = t { selectedValue = val }
+    getVal t = selectedValue t
 

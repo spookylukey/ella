@@ -65,7 +65,7 @@ testRadioButtonListRender = ("<label>" ++
                              "<label>" ++
                              "<input type=\"radio\" name=\"foo\" value=\"val2\" id=\"id_foo_1\" />" ++
                              " Label 2</label><br />") ~=?
-                            (render $ RBL.RadioButtonList { value = "val1"
+                            (render $ RBL.RadioButtonList { selectedValue = "val1"
                                                           , name = "foo"
                                                           , identifier = "id_foo"
                                                           , values = ["val1", "val2"]
