@@ -11,8 +11,10 @@ module Ella.Request (
                    , allGET
                    , getPOST
                    , getPOSTlist
+                   , hasPOST
                    , getGET
                    , getGETlist
+                   , hasGET
                    , getCookieVal
                    , allCookies
                    , files
@@ -196,6 +198,11 @@ getPOST req name = Map.lookup name $ _postInputMap req
 getPOSTlist :: Request -> String -> [String]
 getPOSTlist req name = getMatching name (allPOST req)
 
+-- | returns True if the specified key is found in the
+-- Request POST values
+hasPOST :: Request -> String -> Bool
+hasPOST req name = Map.member name $ _postInputMap req
+
 -- | Retrieve a single query string value (last one wins if there are multiple)
 getGET :: Request -> String -> Maybe String
 getGET req name = Map.lookup name $ _getInputMap req
@@ -206,6 +213,10 @@ getGET req name = Map.lookup name $ _getInputMap req
 getGETlist :: Request -> String -> [String]
 getGETlist req name = getMatching name (allGET req)
 
+-- | returns True if the specified key is found in the
+-- Request query string paramaters
+hasGET :: Request -> String -> Bool
+hasGET req name = Map.member name $ _getInputMap req
 
 -- | Retrieve the value of a cookie
 getCookieVal req name = lookup name $ allCookies req
