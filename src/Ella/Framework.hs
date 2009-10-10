@@ -38,6 +38,7 @@ import Ella.GenUtils (apply, utf8, exactParse)
 import Ella.Param
 import Ella.Response
 import Ella.Request
+import Maybe (fromJust)
 import System.IO (stdout, hClose)
 import qualified Data.ByteString.Lazy as BS
 
@@ -61,8 +62,9 @@ import qualified Data.ByteString.Lazy as BS
 
 -- | Options for the dispatch process
 data DispatchOptions = DispatchOptions {
-      notFoundHandler :: Request -> IO Response
-    -- ^ function that will return a 404 page in the case of no view functions matching
+      notFoundHandler :: View
+    -- ^ function that will return a 404 page in the case of no view functions matching.
+    -- It is defined as 'View' for simplicity - it should always return 'Just' something.
     , requestOptions :: RequestOptions
     -- ^ options passed to 'buildCGIRequest'
     , viewProcessors :: [View -> View]
@@ -96,7 +98,7 @@ defaultRequestOptions = RequestOptions {
 -- | A set of DispatchOptions useful as a basis.
 defaultDispatchOptions :: DispatchOptions
 defaultDispatchOptions = DispatchOptions {
-                           notFoundHandler = const $ return $ default404
+                           notFoundHandler = const $ return $ Just default404
                          , requestOptions = defaultRequestOptions
                          , viewProcessors = []
                          }
@@ -127,11 +129,8 @@ dispatchCGI :: [View]           -- ^ list of views functions that will be tried 
             -> IO ()
 dispatchCGI views opts = do
   req <- buildCGIRequest (requestOptions opts)
-  resp' <- (apply (viewProcessors opts) $ dispatchRequest views) req
-  resp <- case resp' of
-            Nothing -> notFoundHandler opts $ req
-            Just x -> return x
-  sendResponseCGI resp
+  m_resp <- (apply (viewProcessors opts) $ dispatchRequest $ views ++ [notFoundHandler opts]) req
+  sendResponseCGI $ fromJust m_resp
 
 
 -- Routing
