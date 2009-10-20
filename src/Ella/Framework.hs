@@ -139,6 +139,7 @@ dispatchCGI views opts = do
 --
 -- The routing mechanism has been designed so that you can write code like the following:
 --
+-- > routes :: [View]
 -- > routes = [
 -- >            empty                                  //-> indexView                 $ decs
 -- >          , "posts/" <+/> empty                    //-> postsView                 $ []
@@ -152,7 +153,7 @@ dispatchCGI views opts = do
 --
 -- where:
 --
--- >  postsView, indexView :: Request -> IO (Maybe Response)
+-- >  postsView, indexView :: Request -> IO (Maybe Response)  (i.e. View)
 -- >  viewWithStringParam :: String -> Request -> IO (Maybe Response)
 -- >  viewWithIntParam :: Int -> Request -> IO (Maybe Response)
 -- >  viewWithIntAndStringParam :: Int -> String -> Request -> IO (Maybe Response)
