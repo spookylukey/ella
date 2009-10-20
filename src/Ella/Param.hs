@@ -28,6 +28,9 @@ instance Param Int where
 instance Param Integer where
     capture = exactParse
 
+instance Param Bool where
+    capture = exactParse
+
 instance Param String where
     capture = Just
 
