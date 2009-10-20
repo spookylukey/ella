@@ -128,9 +128,11 @@ mkCSRFProtection baseCookie rejectView secret =
           -- if POST request, reject if no cookie or no POST token or
           -- POST token doesn't match hash of cookie
           if requestMethod req == "POST"
-            then if isNothing incomingCookie || (incomingCookie /= incomingToken)
-                   then rejectView req
-                   else normalProc
+            then if Map.member "HTTP_X_REQUESTED_WITH" $ environment req
+                    then normalProc -- AJAX is exempt
+                    else if isNothing incomingCookie || (incomingCookie /= incomingToken)
+                            then rejectView req
+                            else normalProc
             else normalProc
 
     in CSRFProtection { csrfViewProcessor = pview
