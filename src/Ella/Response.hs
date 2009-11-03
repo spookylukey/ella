@@ -20,6 +20,7 @@ module Ella.Response (-- * Response object
                     , utf8TextResponse
                     , htmlResponse
                     , utf8HtmlResponse
+                    , textBasedResponse
                     , emptyResponse
                     , redirectResponse
                     -- * Using Response objects
@@ -103,8 +104,15 @@ TODO
 -}
 
 contentTypeName = HeaderName "Content-type"
-textContent charset = "text/plain; charset=" ++ charset
-htmlContent charset = "text/html; charset=" ++ charset
+contentTypeValue mimetype charset = mimetype ++ "; charset=" ++ charset
+textContent charset = contentTypeValue "text/plain" charset
+htmlContent charset = contentTypeValue "text/html" charset
+
+-- | An empty response of the given mimetype and charset.
+textBasedResponse :: String -> String -> Response
+textBasedResponse mimetype charset = emptyResponse {
+                                       headers = [(contentTypeName, contentTypeValue mimetype charset)]
+                                     }
 
 -- | An empty text/plain response of a given charset
 textResponse :: String -> Response

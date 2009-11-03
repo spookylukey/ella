@@ -154,7 +154,7 @@ pathInfo request = let pi = Map.lookup "PATH_INFO" $ environment request
 -- PATH_INFO and other vars contains Haskell Strings, but in reality these are
 -- simply the bytes obtained from the environment packed into Unicode chars one
 -- byte at a time.  We re-pack them into a ByteString (pack discards anything
--- > \255, which includes nothing in this case), and then re-interpret.
+-- greater than \255, which includes nothing in this case), and then re-interpret.
 repack :: String -> Encoding -> String
 repack str encoding = let bytes = pack str
                       in (decoder encoding) bytes
