@@ -11,13 +11,14 @@ import Data.ByteString.Search.KnuthMorrisPratt (matchLL)
 import Data.Digest.Pure.SHA (showDigest, sha1)
 import Data.Maybe (isJust, fromJust, isNothing)
 import Ella.Framework
-import Ella.GenUtils (utf8, getTimestamp, randomStr, with)
+import Ella.GenUtils (utf8, getTimestamp, randomStr, with, splitOn, exactParse)
 import Ella.Request
 import Ella.Response
-import System.Time (ClockTime(..), toUTCTime)
+import System.Locale (defaultTimeLocale)
+import System.Time (ClockTime(..), toUTCTime, formatCalendarTime, CalendarTime)
 import qualified Data.Map as Map
 
-makeShaHash prefix secret val = showDigest $ sha1 $ utf8 $ prefix ++ secret ++ val
+makeShaHash val = showDigest $ sha1 $ utf8 $ val
 
 -- | Create view processor for implementing signed cookies.
 -- Pass a secret string (used for hashing), and apply the resulting function
@@ -26,7 +27,8 @@ signedCookiesProcessor :: String -> (View -> View)
 signedCookiesProcessor secret view req =
     do
       -- modify the request to strip invalid cookies
-      let req2 = removeInvalidCookies req
+      cur_timestamp <- getTimestamp
+      let req2 = removeInvalidCookies req cur_timestamp
       -- get the normal response
       resp' <- view req2
       case resp' of
@@ -34,19 +36,39 @@ signedCookiesProcessor secret view req =
         -- Now modify outgoing response
         Just resp -> return $ Just $ resp { cookies = map addShaHash $ cookies resp }
     where
-      mkHash val = makeShaHash "signedcookies" secret val
-      addShaHash cookie = cookie { cookieValue = (mkHash $ cookieValue cookie) ++ ":" ++ cookieValue cookie }
-      retrieveCookieVal fullval = let (hash, val') = span (/= ':') fullval
-                                      val = drop 1 val' -- for the ':'
-                                  in if mkHash val == hash
-                                     then Just val
-                                     else Nothing
-      removeInvalidCookies req = let checked = do
-                                       (name, val) <- allCookies req
-                                       let newval = retrieveCookieVal val
-                                       guard (isJust newval)
-                                       return (name, fromJust newval)
-                                 in req { allCookies = checked }
+      removeInvalidCookies req timestamp =
+          let checked = do
+                (name, val) <- allCookies req
+                let newval = retrieveCookieVal val timestamp
+                guard (isJust newval)
+                return (name, fromJust newval)
+          in req { allCookies = checked }
+
+      retrieveCookieVal fullval timestamp =
+          let hash:expires:val:_ = splitOn (== ':') fullval ++ repeat ""
+              hashMatch = mkHash val expires == hash
+              expiresOK = if expires == ""
+                            then True
+                            else case exactParse expires of
+                                   Nothing -> False
+                                   Just expires' -> expires' > timestamp
+          in if hashMatch && expiresOK
+             then Just val
+             else Nothing
+
+      addShaHash cookie =
+          let val = cookieValue cookie
+              ts = showExpires $ cookieExpires cookie
+          in cookie {
+                   cookieValue = mkHash val ts ++ ":" ++ ts ++ ":" ++ val
+                 }
+
+      mkHash :: String -> String -> String
+      mkHash val expires = makeShaHash ("signedcookies:" ++ secret ++ ":" ++ expires ++ ":" ++ val)
+
+      showExpires :: Maybe CalendarTime -> String
+      showExpires (Just x) = formatCalendarTime defaultTimeLocale "%s" x
+      showExpires Nothing = ""
 
 -- | CSRF protection
 --

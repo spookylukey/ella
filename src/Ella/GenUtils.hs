@@ -53,3 +53,10 @@ randomStr n = do
     g <- newStdGen
     return $ take n (randomRs chars g)
   where chars = ('a','z')
+
+-- | Split string on a separator
+splitOn :: (a -> Bool) -> [a] -> [[a]]
+splitOn f xs = split xs
+  where split xs = case break f xs of
+          (chunk,[])     -> chunk : []
+          (chunk,_:rest) -> chunk : split rest
