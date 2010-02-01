@@ -21,7 +21,6 @@ Library
         network >= 2.1,
         SHA >= 1.0.2,
         old-time >= 1.0.0,
-        old-locale >= 1.0.0,
         unix >= 2.3,
         cgi >= 3001
   Exposed-Modules:

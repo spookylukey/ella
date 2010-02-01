@@ -9,8 +9,7 @@ import Ella.Processors.Security
 import Ella.Request
 import Ella.Response
 import Ella.TestUtils (mkGetReq, mkPostReq, addCookieValues)
-import System.Locale (defaultTimeLocale)
-import System.Time (toUTCTime, ClockTime(..), formatCalendarTime, CalendarTime)
+import System.Time (toUTCTime, ClockTime(..), CalendarTime, toClockTime)
 import Test.HUnit
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Map as Map
@@ -36,8 +35,11 @@ viewDisplayingCookies req = return $ Just $ buildResponse [
 signCookieVal :: String -> Maybe CalendarTime -> String
 signCookieVal val expires = (showDigest $ sha1 $ utf8 ("signedcookies:" ++ scp_secret ++ ":" ++ showExpires expires ++ ":" ++ val)) ++ ":" ++ showExpires expires ++ ":" ++ val
 
+clockTimeToInteger :: ClockTime -> Integer
+clockTimeToInteger (TOD x y) = x
+
 showExpires :: Maybe CalendarTime -> String
-showExpires (Just x) = formatCalendarTime defaultTimeLocale "%s" x
+showExpires (Just x) = show $ clockTimeToInteger $ toClockTime x
 showExpires Nothing = ""
 
 testSignedCookiesProcessor1 =

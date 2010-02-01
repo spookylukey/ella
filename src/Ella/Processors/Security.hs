@@ -14,8 +14,7 @@ import Ella.Framework
 import Ella.GenUtils (utf8, getTimestamp, randomStr, with, splitOn, exactParse)
 import Ella.Request
 import Ella.Response
-import System.Locale (defaultTimeLocale)
-import System.Time (ClockTime(..), toUTCTime, formatCalendarTime, CalendarTime)
+import System.Time (ClockTime(..), toUTCTime, toClockTime, ClockTime, CalendarTime)
 import qualified Data.Map as Map
 
 makeShaHash val = showDigest $ sha1 $ utf8 $ val
@@ -66,8 +65,13 @@ signedCookiesProcessor secret view req =
       mkHash :: String -> String -> String
       mkHash val expires = makeShaHash ("signedcookies:" ++ secret ++ ":" ++ expires ++ ":" ++ val)
 
+      -- NB: using formatCalendarTime with "%s" does not work on target
+      -- environment (CentOS 4.5), so use this alternative.
+      clockTimeToInteger :: ClockTime -> Integer
+      clockTimeToInteger (TOD x y) = x
+
       showExpires :: Maybe CalendarTime -> String
-      showExpires (Just x) = formatCalendarTime defaultTimeLocale "%s" x
+      showExpires (Just x) = show $ clockTimeToInteger $ toClockTime x
       showExpires Nothing = ""
 
 -- | CSRF protection
