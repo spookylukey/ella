@@ -94,8 +94,10 @@ data CSRFProtection = CSRFProtection {
 }
 
 defaultCSRFRejectView :: View
-defaultCSRFRejectView req = return $ Just $ buildResponse [ addContent $ utf8 "<h1>403 Forbidden</h1>"
-                                                          , addContent $ utf8 "<p>CSRF protection triggered, request aborted"
+defaultCSRFRejectView req = return $ Just $ buildResponse [ addContent $ utf8 $
+                                                              "<h1>403 Forbidden</h1>" ++
+                                                              "<p>CSRF protection triggered, request aborted.</p>" ++
+                                                              "<p>Explanation: due to a security measure used to combat a problem known as 'CSRF', cookies must be enabled in order to POST any data to this website.</p>"
                                                           , setStatus 403
                                                           ] utf8HtmlResponse
 
